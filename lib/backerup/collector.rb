@@ -9,7 +9,7 @@ module BackerUp
   class Collector
     def initialize(config)
       @config = config
-      @verbose = true
+      @verbose = false
     end
     def run
       backup = @config

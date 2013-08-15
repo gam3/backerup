@@ -25,5 +25,5 @@ rescue LoadError
   require "backerup/server"
 end
 
-BackerUp.server.run
+BackerUp.application.run
 
