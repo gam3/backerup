@@ -14,8 +14,13 @@ module BackerUp
     def run
       backup = @config
 
-      FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
-      FileUtils.mkdir_p( backup.static_path, :mode => 0755 )
+      begin
+        FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
+        FileUtils.mkdir_p( backup.static_path, :mode => 0755 )
+      rescue => x
+        puts "unable to create directory #{x}"
+        return
+      end
 
       Open3.popen3(*backup.command) do |stdin, stdout, stderr, wait_thr|
         stdin.close
