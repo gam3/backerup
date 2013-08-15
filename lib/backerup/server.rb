@@ -1,13 +1,45 @@
+require 'pp'
 
 require 'optparse'
 require 'ostruct'
 require 'backerup/version'
+require 'backerup/configure'
+require 'backerup/collector'
 
 module BackerUp
   class Application
+    def read_configuration(filenames)
+      filenames.each do |filename|
+        if File.exists?(filename)
+          @configureation = Configure.new
+          File.open(filename, 'r') do |file|
+            data = file.read
+            @configureation.instance_eval data
+          end
+        end
+      end
+    end
+
     def run(*args)
       @name = $0
+      @configure ||= Array.new
       handle_options
+      if @configure.size == 0
+        @configure.push '/etc/backerup.conf'
+      end
+      read_configuration @configure
+      if @configureation.nil?
+        puts "No configuration file found"
+        exit
+      end
+      backups = BackerUp::Configure::Backups.new(@configureation)
+      all  = Array.new
+      backups.each do |backup|
+        all.push BackerUp::Collector.new(backup)
+      end
+      all.each do |collect|
+        collect.run
+      end
     end
 
     def options
@@ -17,7 +49,7 @@ module BackerUp
     # A list of all the standard options used by backerup
     def standard_options
       [
-        [ '--conf', '-c',
+        [ '--conf', '-c filename',
           "Path to configuration file",
           lambda { |value|
             @configure.push value

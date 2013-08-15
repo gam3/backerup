@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
 #  s.add_runtime_dependency "launchy"
   s.add_development_dependency "yard-minitest-spec", "~>0.1.4"
 
-  s.files         = `git ls-files`.split("\n")
+  s.files         = `git ls-files`.split("\n").keep_if { |file| file != '.gitignore' }
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]

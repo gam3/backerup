@@ -14,7 +14,7 @@ module BackerUp
     def run
       backup = @config
 
-      FileUtils.mkdir_p( backup.acitve_path, :mode => 0755 )
+      FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
       FileUtils.mkdir_p( backup.static_path, :mode => 0755 )
 
       Open3.popen3(*backup.command) do |stdin, stdout, stderr, wait_thr|
@@ -28,6 +28,7 @@ module BackerUp
             when stdout
               if control.size > 0
                 cnt, filename = control.shift
+puts "#{cnt} :: #{filename}"
                 dst = File.join(backup.static_path, filename)
                 if cnt.match(/deleting/)
                   if File.directory? dst
@@ -38,10 +39,10 @@ module BackerUp
                   next          # FIXME this should be in a if or when
                 end
                 count = 0
-                src = File.join(backup.acitve_path, filename)
+                src = File.join(backup.active_path, filename)
                 while !File.exists? src
-                  raise "FIXME" 
                   break if File.symlink? src
+#                  raise "FIXME #{src}"  
                   sleep 0.01
                   if (count += 1) > 1000
                     break
@@ -95,7 +96,7 @@ module BackerUp
                 end
                 next
                 if filename.match(%r|/$|)
-                  src = File.join(backup.acitve_path, filename)
+                  src = File.join(backup.active_path, filename)
                   dst = File.join(backup.static_path, filename)
                   begin
                     Dir.mkdir(dst, 0775)
@@ -103,7 +104,7 @@ module BackerUp
                     puts "error #{x}"
                   end
                 else
-                  src = File.join(backup.acitve_path, filename)
+                  src = File.join(backup.active_path, filename)
                   dst = File.join(backup.static_path, filename)
                   if  File.symlink? src
                     File.symlink( File.readlink(src), dst) 
