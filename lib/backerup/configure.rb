@@ -141,6 +141,8 @@ module BackerUp
           ret.push '-a'
           ret.push '--out-format=%i|%n'
           ret.push '--delete'
+          ret.push '--bwlimit=500'
+          ret.push '--max-size=500M'
 
           @data.excludes.each do |exclude|
             t = exclude.sub(/^#{@path}\//, '')

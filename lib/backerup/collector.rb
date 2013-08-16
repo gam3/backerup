@@ -80,6 +80,10 @@ puts "#{cnt} :: #{filename}"
                     end
                   when 'file'
                     begin
+                      unless File.exists? Dir.directory dst
+puts "missing Directory #{Dir.directory dst}"
+                        FileUtils.mkdir_p( Dir.directory(dst), :mode => 0755 )
+                      end
                       if File.exists?(dst)
                         if File.directory? dst
                           Dir.unlink(dst)
@@ -91,8 +95,9 @@ puts "#{cnt} :: #{filename}"
                       else
                         File.link(src, dst)
                       end
+                    rescue Errno::ENOENT => x
+                      File.unlink(src)
                     rescue => x
-                      puts "link error:: #{x}"
                       File.unlink(src)
                     end
                   else
