@@ -1,0 +1,10 @@
+
+start_time=$(date +"%Y%m%d%H%M%S")
+
+cd /opt/backerup || exit 4
+
+trap "rm -f .hourly-$start_time" EXIT
+cp -rl .static .hourly-$start_time
+mv .hourly-$start_time hourly-$start_time
+
+
