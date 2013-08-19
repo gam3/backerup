@@ -25,6 +25,11 @@ task :gem do
   Gem::Builder.new(eval(File.read('backerup.gemspec'))).build
 end
 
+task :doc do |t|
+    `test -x $YARDOC && $YARDOC --plugin minitest-spec lib/ specs/`
+end
+task :docs => :doc
+
 desc "Installs the gem"
 task :install => :gem do
   sh "gem install backerup-#{BackerUp::VERSION}.gem --no-rdoc --no-ri"
@@ -39,7 +44,9 @@ end
 task :tests => :test
 
 desc "Run all specs"
-task :specs do
+Rake::TestTask.new(:specs) do |t|
+     t.libs << "specs"
+     t.test_files = FileList[ 'specs/spec_*.rb' ]
 end
 task :spec => :specs
 

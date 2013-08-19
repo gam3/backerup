@@ -11,6 +11,9 @@ module BackerUp
       @config = config
       @verbose = false
     end
+    def logfile
+      @log ||= Logger::Logger.new('/tmp/logger')
+    end
     def run
       backup = @config
 
@@ -18,7 +21,7 @@ module BackerUp
         FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
         FileUtils.mkdir_p( backup.static_path, :mode => 0755 )
       rescue => x
-        puts "unable to create directory #{x}"
+        log.error "unable to create directory #{x}"
         return
       end
 
@@ -33,7 +36,7 @@ module BackerUp
             when stdout
               if control.size > 0
                 cnt, filename = control.shift
-puts "#{cnt} :: #{filename}"
+                logfile.info "#{cnt} :: #{filename}"
                 dst = File.join(backup.static_path, filename)
                 if cnt.match(/deleting/)
                   if File.directory? dst
@@ -54,13 +57,13 @@ puts "#{cnt} :: #{filename}"
                   end
                 end
                 if count > 1000
-                  puts src
+                  logfile.info src
                   raise "failed to download #{src}"
                   next
                 end
                 if File.symlink? src
                   if File.exists?(dst) or File.symlink?(dst)
-                    puts "unlnked #{dst}" if @verbose
+                    logfile.info "unlnked #{dst}" if @verbose
                     File.unlink dst
                   end
                   File.symlink( File.readlink(src), dst) 
@@ -75,7 +78,7 @@ puts "#{cnt} :: #{filename}"
                         end
                         Dir.mkdir(dst, 0775)
                       rescue => x
-                        puts "error: #{x}"
+                        logfile.info "error: #{x}"
                       end
                     end
                   when 'file'
@@ -93,11 +96,16 @@ puts "missing Directory #{Dir.directory dst}"
                           File.link(dst, src)
                         end
                       else
+                        path = File.dirname dst
+                        unless File.exist? path
+                          FileUtils.mkdir_p path
+                        end
                         File.link(src, dst)
                       end
                     rescue Errno::ENOENT => x
                       File.unlink(src)
                     rescue => x
+                      logfile.info "link error:: #{x}"
                       File.unlink(src)
                     end
                   else
@@ -111,7 +119,7 @@ puts "missing Directory #{Dir.directory dst}"
                   begin
                     Dir.mkdir(dst, 0775)
                   rescue => x
-                    puts "error #{x}"
+                    logfile.info "error #{x}"
                   end
                 else
                   src = File.join(backup.active_path, filename)
@@ -121,35 +129,35 @@ puts "missing Directory #{Dir.directory dst}"
                     next  # FIXME
                   end
                   while !File.exists? src
-                    puts "wait #{src}"
+                    logfile.info "wait #{src}"
                     sleep 0.1
                   end
                   begin
                     File.link(src, dst)
                   rescue => x
-                    puts "link error: #{x}"
+                    logfile.info "link error: #{x}"
                   end
                 end
               end
               if line = stdout.readline
                 line.chomp!
-                puts "'#{line}'" if @verbose
+                logfile.info "'#{line}'" if @verbose
                 (cnt, filename) = line.split(/\|/)
                 control.push [cnt, filename]
               end
             when stderr
               if line = stderr.readline
-                puts "Error: #{line}"
+                logfile.info "Error: #{line}"
               end
             end
           rescue EOFError => x
             still_open.keep_if{ |x| x != fh }
           rescue => x
-            puts "ERROR #{x}"
+            logfile.info "ERROR #{x}"
           end
           end # case
         end # while
-        puts 'bob' until wait_thr.join(0.15)
+        logfile.info 'bob' until wait_thr.join(0.15)
       end
     end # def run
   end # class Collector
