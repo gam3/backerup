@@ -47,8 +47,25 @@ module BackerUp
       backups.each do |backup|
         all.push BackerUp::Collector.new(backup)
       end
-      all.each do |collect|
-        collect.run
+      collect = []
+      while true
+        if collect.size == 0
+          collect = all.dup
+        end
+        all.each do |c|
+          if c.thread
+            puts c.thread
+            pp c.current
+            puts '---'
+          end
+        end
+        if  Thread.list.size < 2
+          nxtc = collect.pop
+          t = nxtc.trun
+          puts "Started #{ t }"
+        else
+          sleep 10
+        end
       end
     end
 
@@ -95,7 +112,7 @@ module BackerUp
           exit
         end
         standard_options.each { |args| opts.on(*args) }
-        opts.environment('BAKERUP_OPT')
+        opts.environment('BACKERUP_OPT')
       end.parse!
     end
   end
