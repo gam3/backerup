@@ -1,4 +1,5 @@
 require 'pp'
+require 'logger'
 
 require 'optparse'
 require 'ostruct'
@@ -7,7 +8,16 @@ require 'backerup/configure'
 require 'backerup/collector'
 
 module BackerUp
+  module Logger
+    class Logger < ::Logger
+    end
+  end
   class Application
+    def initialize
+      @original_dir = Dir.getwd 
+      @logger = Logger::Logger.new(STDOUT)
+    end
+    attr_reader :original_dir
     def read_configuration(filenames)
       filenames.each do |filename|
         if File.exists?(filename)
