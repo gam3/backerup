@@ -1,5 +1,7 @@
 require 'pp'
 
+require 'resolv'
+
 module BackerUp
   class Assertion < Exception; end
   class Skip < Assertion; end
@@ -14,6 +16,8 @@ module BackerUp
     end
   end
   class Configure < Common
+    def hostname(name = :default, &block)
+    end
     def backerup(name = :default, &block)
       begin
       if block
@@ -122,6 +126,7 @@ puts "Skip #{x}"
       end
     end
     def host(name, &block)
+      @ips = Resolv.getaddress name
       begin
         host = @hosts[name] = Host.new(name)
         if block
@@ -150,7 +155,6 @@ puts "Skip #{x}"
           end
           data.backups.each do |backup_data|
             next unless backup_data.type?
-pp backup_data
             ret.push Backup.new(
               :root => root,
               :active_path => File.join(active_path, host, backup_data.path, ''),
@@ -174,6 +178,9 @@ pp backup_data
         attr_reader :active_path
         attr_reader :static_path
         attr_reader :path
+        def logfile
+          @log ||= Logger::Logger.new('/tmp/logger')
+        end
         def initialize(args)
           @root = args[:root]
           @host = args[:host]
@@ -219,7 +226,7 @@ pp backup_data
           end
           ret.push "#{@host}::#{@data.type.source_path}"
           ret.push "#{File.join @active_path, ''}"
-pp ret
+          logfile.debug(ret.join(' '))
           ret
         end
       end

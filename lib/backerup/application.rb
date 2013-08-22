@@ -30,6 +30,10 @@ module BackerUp
       end
     end
 
+    def logfile
+      @log ||= Logger::Logger.new('/tmp/logger')
+    end
+
     def run(*args)
       @name = $0
       @configure ||= Array.new
@@ -49,23 +53,17 @@ module BackerUp
       end
       collect = []
       while true
-        if collect.size == 0
-          collect = all.dup
-        end
         all.each do |c|
+          if c.due?
+            puts c
+            t = c.trun
+            logfile.info "Started #{ t }"
+          end
           if c.thread
-            puts c.thread
-            pp c.current
-            puts '---'
+#            logfile.info "active #{c.thread}"
           end
         end
-        if  Thread.list.size < 2
-          nxtc = collect.pop
-          t = nxtc.trun
-          puts "Started #{ t }"
-        else
-          sleep 10
-        end
+        sleep 10
       end
     end
 
