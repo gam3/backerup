@@ -161,7 +161,7 @@ puts "Skip #{x}"
               :static_path => File.join(static_path, host, backup_data.path, ''),
               :host => host,
               :path => backup_data.path,
-              :bwlimit => 1,
+              :bwlimit => 2000,
               :data => backup_data,
               :all_paths => paths.select { |x| x != backup_data.path },
             )
