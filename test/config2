@@ -1,0 +1,36 @@
+
+hostname('BurkinaFaso') {
+   host('demeter') {
+     bandwidth '50K'
+   }
+   host('burkinaFaso') {
+     bandwidth '1000M'
+   }
+}
+
+backerup {
+  host('burkinaFaso') {
+    root = '/opt/backerup'
+    root '/opt/backerup'
+    backup('/home/gam3') {
+      rsync {
+        source_path 'gam3'
+      }
+      exclude '/home/gam3/movies'
+      exclude '/home/gam3/.VirtualBox'
+      exclude '/home/gam3/src/backfire_10.03.1'
+    }
+  }
+  host('bob') {
+    root = '/opt/backerup'
+    backup('/home/gam3') {
+      rsync {
+        source_path 'gam3'
+      }
+      exclude '/home/gam3/movies'
+      exclude '/home/gam3/.VirtualBox'
+      exclude '/home/gam3/src/backfire_10.03.1'
+    }
+  }
+}
+

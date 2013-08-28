@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+require 'time'
+require 'date'
+require 'fileutils'
+
+start = Time.parse('2012-07-01 01:00:00')
+now = Time.now
+
+a = 7 * 24 * 60 * 60
+
+puts start
+while start < now
+  if now.to_date - start.to_date < 2
+    start += 3600 / 2
+  elsif now.to_date - start.to_date < 30
+    start += 3600
+  elsif now.to_date - start.to_date < 365
+    start += 24 * 60 * 60
+  else
+    start +=  7 * 24 * 60 * 60
+  end
+  FileUtils.touch("hourly-#{start.strftime("%Y%m%d%H%M%S")}")
+end

@@ -1,42 +1,60 @@
-\input texinfo @c -*-mode:texinfo; compile-command: "makeinfo backerup.texi"-*-
-
+\input texinfo  @c -*-texinfo-*-
+@comment %**start of header
 @setfilename backerup.info
 @documentlanguage en
 @documentencoding iso-8859-1
 @include version.texi
-@settitle The BackerUp@registeredsymbol{} Robust Network Backup System
+@settitle The BackerUp@registeredsymbol{} @value{VERSION}
 @setchapternewpage odd
+
 @ifnothtml
 @setcontentsaftertitlepage
 @end ifnothtml
 @finalout
 
+@smallbook
+
+@c %**end of header
+
+@c Combine indices.
+
+@syncodeindex ky cp
+@syncodeindex pg cp
+@syncodeindex tp cp
+@defcodeindex op
+@syncodeindex op cp
+@syncodeindex vr cp
+
 @copying
-This manual is for BackerUp@registeredsymbol{} (version @value{VERSION}, @value{UPDATE})
-a system to manage tasks for human beings.
+
+This manual is for BackerUp@registeredsymbol{} (version @value{VERSION}, @value{UPDATED}),
+which creates and maintains remote backups.
 
 Copyright @copyright{} 2013 G. Allen Morris III
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.1 or
+under the terms of the GNU General Public License, Version 2 or
 any later version published by the Free Software Foundation; with no
 Invariant Sections.  A copy of the license is
-included in the section entitled ``GNU Free Documentation License.''
+included in the section entitled ``GNU General Public License.''
 
 @end quotation
 @end copying
 
 @dircategory Networking
 @direntry
-* Backerup: Documentation of the @emph{backerup} backup management system.
+* Backerup:             Backup management system.
 @end direntry
+
+@shorttitlepage @command{backerup}
 
 @titlepage
 @title BackerUp
 @subtitle A Robust Network Backup System
-@subtitle for Version @value{VERSION}
+@subtitle @value{RENDITION} @value{VERSION}, @value{UPDATED}
 @author G. Allen Morris III <@email{gam3@@gam3.com}>
+
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -54,10 +72,9 @@ included in the section entitled ``GNU Free Documentation License.''
 * Distribution::            Where to find backerup: source, packages etc.
 * Introduction::            Important concepts you need to know as a user
 * Invoking::                How to invoke backerup
-* Environment Variables::   Environment variables which affect backerup
 * Errors and omissions::    Known problems
 * History::                 History of BackerUp
-* Copying this manual::     The GNU Free Documentation License
+* Copying this manual::     The GNU General Public License
 @end menu
 
 @node Distribution
@@ -79,24 +96,26 @@ You can obtain BackerUp from a friend or from the Internet:
 @c @node Copying, Introduction, Distribution, Top
 @c #@include gpl.texi
 
-@node Introduction, Invoking, Distribution, Top
+@node Introduction
 @chapter Introduction
 
 BackerUp is a system to backup computer filesystems across possibly unreliable networks.
 
-It relies heavily on the @emph{rsync} program to do the actual coping of files.
-However it could use any program to do the actual moving of files across
-the network.
+It relies heavily on the @emph{rsync} program by Andrew Tridgell, Wayne
+Davison, and others to do the actual coping of files. However it could
+use other programs to do the actual moving of files across the network.
 
 Backerup is simular to these programs:
 
 @itemize
   @item rsnapshot
-  @item rsynce
+  @item rsync
+  @item rdiff-backup
+  @item Dirvish
 @end itemize
 
-@node Invoking, Environment Variables, Introduction, Top
-@chapter Invoking
+@node Invoking
+@chapter Invoking @command{backerup}
 
 Backerup has 3 major componantes: a collector, a copier and a cleaner.
 
@@ -119,10 +138,44 @@ would be to keep 8 hours of hourly backups then only keep a backup of
 every 4 hours and after 24 hours only keep a backup of very 8 hours and
 after 2 days on keep 1 backup for each day, etc.
 
-@subsubsection Microsoft Windows
+@menu
+* Command-line Options::        Short and long names, grouped by category.
+* Microsoft Windows::        Short and long names, grouped by category.
+@end menu
 
-@node Environment Variables, Errors and omissions, Invoking, Top
-@chapter Environment Variables
+@node Command-line Options
+@section Command-line Options
+
+@command{backerup} comes with a rich set of options:
+
+@menu
+* Generic Program Information:: Short and long names, grouped by category.
+* Environment Variables::       Evironment variables used
+@end menu
+
+@node Generic Program Information
+@subsection Generic Program Information
+
+@table @option
+
+@item --help
+@opindex --help
+@cindex usage summary, printing
+Print a usage message briefly summarizing the command-line options
+and the bug-reporting address, then exit.
+
+@item -V
+@itemx --version
+@opindex -V
+@opindex --version
+@cindex version, printing
+Print the version number of @command{grep} to the standard output stream.
+This version number should be included in all bug reports.
+
+@end table
+
+@node Environment Variables
+@subsection Environment Variables
 
 Backerup uses the following environment variables:
 
@@ -131,6 +184,13 @@ Backerup uses the following environment variables:
 @item PATH
 
 @end table
+
+@node Microsoft Windows
+@section Microsoft Windows
+
+If you can get @emph{rsyncd} to run on a Windows compter you can use
+@emph{backerup} to backup that computer.
+
 
 @section design
 @subsection copier
@@ -147,11 +207,12 @@ times from the original project will be moved to the new project.
 These are notifications and can come from many sources.
 A notification has a start time and my have a endtime and a type.
 
-@node Errors and omissions, History, Environment Variables, Top
+@node Errors and omissions
+@chapter Errors and omissions
 
 There are no bugs.
 
-@node History, Copying this manual, Errors and omissions, Top
+@node History
 @appendix History of BackerUp
 
 @itemize @bullet
@@ -179,9 +240,9 @@ system each file is complete.
 @node Copying this manual
 @appendix Copying this manual
 @menu
-* GNU Free Documentation License::  How you can copy and share this manual.
+* GNU General Public License::  How you can copy and share this manual.
 @end menu
 
-@include fdl.texi
+@include gpl.texi
 
 @bye

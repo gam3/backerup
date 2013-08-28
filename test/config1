@@ -1,0 +1,25 @@
+
+hostname('BurkinaFaso') {
+   host('demeter') {
+     bandwidth '50K'
+   }
+   host('burkinaFaso') {
+     bandwidth '1000M'
+   }
+}
+
+root '/opt/backerup'
+
+backerup {
+  host('burkinaFaso') {
+    backup('/home/gam3') {
+      rsync {
+        source_path 'gam3'
+      }
+      exclude '/home/gam3/movies'
+      exclude '/home/gam3/.VirtualBox'
+      exclude '/home/gam3/src/backfire_10.03.1'
+    }
+  }
+}
+

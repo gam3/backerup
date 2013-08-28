@@ -12,11 +12,6 @@ module BackerUp
       it 'does not accept arguments' do
         lambda { Application.new( 1 ) }.must_raise ArgumentError
       end
-      describe '#new' do
-        it 'does thngs' do
-          true
-        end
-      end
     end
   end
 end

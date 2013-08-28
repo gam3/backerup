@@ -13,11 +13,6 @@ module BackerUp
         lambda { Configure.new( 1 ) }.must_raise ArgumentError
       end
     end
-    describe '#new' do
-      it 'does thngs' do
-        true
-      end
-    end
   end
 end
 

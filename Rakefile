@@ -15,6 +15,7 @@ ENV['YARDOC']=`which yardoc`
 require File.dirname(__FILE__) + '/lib/backerup/version.rb'
 require 'rbconfig'
 require 'rake/testtask'
+require 'yard'
 
 #YARD::VERSION.replace(ENV['YARD_VERSION']) if ENV['YARD_VERSION']
 
@@ -50,3 +51,7 @@ Rake::TestTask.new(:specs) do |t|
 end
 task :spec => :specs
 
+YARD::Rake::YardocTask.new do |t|
+  t.files   = ['lib/**/*.rb', 'bin/*', 'specs/spec_*.rb' ]   # optional
+  t.options = [ '--plugin', 'minitest-spec' ] # optional
+end

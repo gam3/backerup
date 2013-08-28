@@ -14,31 +14,51 @@ module BackerUp
       @verbose = false
       @started = nil
     end
+    # is the collector due to run
     def due?
       if @thread
         return false
       end
       if @ended
-        puts Time.now - @ended 
+        if Time.now - @ended  < 1800
+          return false
+        end
+      end
+      return true
+    end
+    # is the collector overdue to run
+    def overdue?
+      if @thread
+        return false
+      end
+      if @ended
         if Time.now - @ended  < 3600
           return false
         end
       end
       return true
     end
+    # @return [Logger::Logger] return a logging object
     def logfile
-      @log ||= Logger::Logger.new('/tmp/logger')
+      BackerUp.logger
     end
+    # run the collector in syncronous mode
     def run
       if @thread
         return nil
       end
       thread = trun
-puts "wait"
       thread.join if thread
-puts "done"
       @thread = nil
     end
+    def stop
+      @stop = true
+    end
+    def kill
+      Process.kill 'TERM', @pid
+      @pid = nil
+    end
+    # run the collector in asyncronous mode
     def trun
       backup = @config
 
@@ -46,7 +66,7 @@ puts "done"
         FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
         FileUtils.mkdir_p( backup.static_path, :mode => 0755 )
       rescue => x
-        log.error "unable to create directory #{x}"
+        logfile.error "unable to create directory #{x}"
         return
       end
 
@@ -58,14 +78,15 @@ puts "done"
           Open3.popen3(*backup.command) do |stdin, stdout, stderr, wait_thr|
             stdin.close
             still_open = [stdout,stderr]
-            control = []
+            @pid = wait_thr.pid
             while not still_open.empty?
               IO.select(still_open,nil,nil,nil)[0].each do |fh|
                 begin
                   case fh
                   when stdout
-                    if control.size > 0
-                      cnt, filename = control.shift
+                    if @current
+                      cnt, filename = @current
+                      @current = nil
                       logfile.info "#{cnt} :: #{filename}"
                       dst = File.join(backup.static_path, filename)
                       if cnt.match(/deleting/)
@@ -80,11 +101,11 @@ puts "done"
                       src = File.join(backup.active_path, filename)
                       while !File.exists? src
                         break if File.symlink? src
-                        puts "FIXME #{src}"  
                         sleep 0.01
-                        if (count += 1) > 1000
+                        if (count += 1) > 2
                           break
                         end
+                        puts "FIXME #{src}"  
                       end
                       if count > 1000
                         logfile.info src
@@ -144,12 +165,25 @@ puts "done"
                       line.chomp!
                       logfile.info "'#{line}'" if @verbose
                       (cnt, filename) = line.split(/\|/)
-                      control.push [cnt, filename]
-                      logfile.info "set '#{line}'"
+                      logfile.debug "starting: '#{File.absolute_path(File.join(backup.path, filename), '/')}'"
                       @current = [cnt, filename]
+                    end
+                    if @stop
+                      if @pid
+                        logfile.info "Stopping #{backup.name} #{@pid}"
+                        begin
+                          Process.kill 'TERM', @pid
+                        rescue => x
+                          logfile.error x
+                        ensure
+                          @pid = nil
+                        end
+                      end
+                      raise EOFError
                     end
                   when stderr
                     if line = stderr.readline
+                      line.chomp!
                       logfile.error "IO: #{line}"
                     end
                   end
@@ -157,11 +191,10 @@ puts "done"
                   still_open.keep_if{ |x| x != fh }
                 rescue => x
                   logfile.error "ERROR #{x}"
-puts x.inspect
                 end
               end # case
             end # while
-            logfile.info 'bob' until wait_thr.join(0.15)
+            @exit_status = wait_thr.value
           end
         rescue => x
           logfile.error "Error End of Thread #{ @thread } #{x}"
@@ -169,6 +202,7 @@ puts x.inspect
         logfile.info "End of Thread #{ @thread }"
         @ended = Time.now
         @thread = nil
+        @stop = false
       end # Thread
     end # def run
   end # class Collector
