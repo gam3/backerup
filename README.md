@@ -10,8 +10,9 @@ Bakerup improves on the ideas that http://www.rsnapshot.com uses.  While rsnapsh
 Todo
 
 - [x] Get the collector to work
+- [x] create demo copier
+- [x] create demo cleaner
 - [ ] Get the configuration working
-- [ ] Test more rsync interactions
-- [ ] create the copier
-
+- [ ] create copier
+- [ ] create cleaner
 
