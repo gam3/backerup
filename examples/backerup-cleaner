@@ -5,8 +5,11 @@ require 'time'
 require 'fileutils'
 require 'set'
 
-@touch = true
+Dir.chdir('/opt/backerup') or exit(4)
+
+@touch = false
 @now = Time.now()
+@verbose = true
 
 types = [ :hourly, :daily, :weekly, :monthly, :yearly ]
 
@@ -102,8 +105,6 @@ end
 
 parts = types.join(',')
 
-@verbose = false
-
 match = "{#{parts}}-#{"[0-9]" * 14 }"
 regexp = /(#{types.join('|')})-([0-9]+$)/
 daily = Hash.new
@@ -148,6 +149,11 @@ seive_hash = Hash[
   monthly: Hash.new { |h,k| h[k] = Array.new },
   yearly: Hash.new { |h,k| h[k] = Array.new },
 ]
+
+Dir.glob("." + match) do |name|
+  # remove partial directories
+#  FileUtils.rm_rf(name)
+end
 
 Dir.glob(match) do |name|
   time = nil
@@ -206,8 +212,9 @@ end
             sec = (modulo_time.to_i / folder_size).round
           end
           if last == sec
-            puts "unlink #{name}" if @verbose || type == :yearly
-            File.unlink(name) unless @dry_run
+            puts "unlink #{name}" if @verbose
+            File.rename(name, "."+name) unless @dry_run
+            FileUtils.rm_rf("."+name)
           end
           last = sec
         else
@@ -219,6 +226,8 @@ end
 end
 
 @dry_run = false
+
+@verbose = true
 
 count = 0
 Dir.glob(match) do |name|

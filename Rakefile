@@ -10,12 +10,14 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-ENV['YARDOC']=`which yardoc`
-
 require File.dirname(__FILE__) + '/lib/backerup/version.rb'
 require 'rbconfig'
 require 'rake/testtask'
-require 'yard'
+begin
+  require 'yard'
+rescue LoadError => x
+  YARD = nil
+end
 
 #YARD::VERSION.replace(ENV['YARD_VERSION']) if ENV['YARD_VERSION']
 
@@ -54,4 +56,5 @@ task :spec => :specs
 YARD::Rake::YardocTask.new do |t|
   t.files   = ['lib/**/*.rb', 'bin/*', 'specs/spec_*.rb' ]   # optional
   t.options = [ '--plugin', 'minitest-spec' ] # optional
-end
+end if YARD
+

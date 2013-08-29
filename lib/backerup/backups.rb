@@ -6,6 +6,7 @@ module BackerUp
       root = config.root
       active_path = File.join(root, config.active_name)
       static_path = File.join(root, config.static_name)
+      partial_path = File.join(root, config.partial_name)
       paths = []
       @host = Hash.new {|h,k| h[k] = Array.new }
       config.hosts.each do |host, data|
@@ -21,9 +22,10 @@ module BackerUp
             :root => root,
             :active_path => File.join(active_path, host, backup_data.path, ''),
             :static_path => File.join(static_path, host, backup_data.path, ''),
+            :partial_path => File.join(partial_path, host, backup_data.path, ''),
             :host => host,
             :path => backup_data.path,
-            :bwlimit => 1,
+            :bwlimit => 1000,
             :data => backup_data,
             :all_paths => paths.select { |x| x != backup_data.path },
           )
@@ -44,6 +46,7 @@ module BackerUp
     class Backup
       attr_reader :active_path
       attr_reader :static_path
+      attr_reader :partial_path
       attr_reader :path
       def initialize(args)
         @root = args[:root]
@@ -54,6 +57,7 @@ module BackerUp
         raise "no static_path" unless @static_path
         raise "no active_path" unless @active_path
         @path = args[:path] or raise('no path')
+        @partial_path = args[:partial_path]
         @data = args[:data]
         @bwlimit = args[:bwlimit] || nil
         @all_paths = args[:all_paths]
@@ -83,6 +87,10 @@ module BackerUp
         ret.push '-a'
         ret.push '--out-format=%i|%n'
         ret.push '--delete'
+        if @partial_path
+          ret.push '--partial'
+          ret.push "--partial-dir=#{@partial_path}"
+        end
         if @bwlimit
           ret.push "--bwlimit=#{@bwlimit}"
         end

@@ -120,9 +120,11 @@ puts "Skip #{x}"
       @hosts = Hash.new
       @static_name = '.static'
       @active_name = '.active'
+      @partial_name = '.partial'
     end
     attr_accessor :active_name
     attr_accessor :static_name
+    attr_accessor :partial_name
     attr_accessor :hosts
     def root(*args)
       if args.size == 1

@@ -69,6 +69,14 @@ module BackerUp
         logfile.error "unable to create directory #{x}"
         return
       end
+      if backup.partial_path
+        begin
+          FileUtils.mkdir_p( backup.partial_path, :mode => 0755 )
+	rescue => x
+	  logfile.error "unable to create directory #{x}"
+	  return
+	end
+      end
 
       raise "You can't run the collector twice" if @thread
 
