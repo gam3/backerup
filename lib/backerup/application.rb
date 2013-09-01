@@ -1,5 +1,4 @@
 require 'pp'
-require 'logger'
 
 require 'optparse'
 require 'ostruct'
@@ -7,20 +6,19 @@ require 'backerup/version'
 require 'backerup/configure'
 require 'backerup/collector'
 require 'backerup/backups'
+require 'backerup/logger'
 require 'shellwords'
+require 'inotify'
 
 module BackerUp
-  module Logger
-    class Logger < ::Logger
-    end
-  end
-  class <<self
-    attr_accessor :logger
-  end
+  # This class holds the different applications of the backerup system
   class Application
+    # This is the default location of the log file
     LOGFILE_NAME = '/var/log/backerup.log'
+    # This is the default location of the configuration file 
     CONFFILE_NAME = '/etc/backerup.conf'
 
+    # The location where BackerUp was run from
     attr_reader :original_dir
 
     def initialize
@@ -48,7 +46,26 @@ module BackerUp
       options.logfile_name = LOGFILE_NAME unless options.logfile_name
       options.conf_name = CONFFILE_NAME unless options.conf_name
 
-      BackerUp.logger = Logger::Logger.new(options.logfile_name)
+      if options.logfile_name
+        BackerUp.logger = Logger::Logger.new(options.logfile_name)
+
+        i = Inotify.new
+
+        t = Thread.new do
+          i.each_event do |ev|
+             if ev.name == File.basename(options.logfile_name)
+               logfile.error("Logfile rotation #{options.logfile_name}")
+               logfile.close()
+               BackerUp.logger = Logger::Logger.new(options.logfile_name)
+               logfile.info("Recreated #{options.logfile_name}")
+             end
+          end
+        end
+
+        dirname = File.dirname(options.logfile_name)
+
+        i.add_watch(dirname, Inotify::DELETE | Inotify::MOVE)
+      end
 
       begin
         @configuration = read_configuration options.conf_name
@@ -90,7 +107,6 @@ module BackerUp
       while true
         all.each do |c|
           if c.due?
-            puts c
             t = c.trun
             logfile.info "Started #{ t }"
           end

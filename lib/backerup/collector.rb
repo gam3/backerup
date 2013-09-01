@@ -6,8 +6,11 @@ require 'backerup/configure'
 configure = BackerUp::Configure.new
 
 module BackerUp
+  # This class contains the collector application of backerup system
   class Collector
+    # access the list of collector threads
     attr_reader :thread
+    # access the list of current running threads
     attr_reader :current
     def initialize(config)
       @config = config

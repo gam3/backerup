@@ -3,8 +3,9 @@ require 'pp'
 require 'resolv'
 
 module BackerUp
-  class Assertion < Exception; end
-  class Skip < Assertion; end
+  # This class is used to disable sections of configuation file
+  class Skip < Exception; end
+  # This class contains configuration section common to all sections
   class Common
     def skip msg = nil, bt = caller
       @skip = [ msg, bt ]
@@ -15,6 +16,7 @@ module BackerUp
       @excludes += paths
     end
   end
+  # The configuration files are executed under this class
   class Configure < Common
     def hostname(name = :default, &block)
     end
@@ -31,10 +33,15 @@ module BackerUp
         raise
       end
     end
+    # This class holds object that describes the configuration for a host
     class Host < Common
+      # access the backups for a host
       attr_accessor :backups
+      # access the list of excluded paths
       attr_accessor :excludes
+      # This class holds the object that describes a configuration for a backup for a host
       class Backup < Common
+        # This class holds the object that describes a configuration for an rsync type backup
         class Rsync
           def path(*bob)
             if bob.size == 1
@@ -49,12 +56,15 @@ module BackerUp
             @source_path
           end
         end
-        attr_reader :path
         def initialize(path)
           @path = path
           @excludes = Array.new
         end
+        # assess the configured path to a backup
+        attr_reader :path
+        # assess the configured excluded paths for this backup
         attr_reader :excludes
+        # assess the configured backup type for this backup
         attr_reader :type
         def partial
           @partial = true
@@ -122,9 +132,13 @@ puts "Skip #{x}"
       @active_name = '.active'
       @partial_name = '.partial'
     end
+    # the path to the active path
     attr_accessor :active_name
+    # the path to the static path
     attr_accessor :static_name
+    # the path to the partial path
     attr_accessor :partial_name
+    # the list of hosts configured
     attr_accessor :hosts
     def root(*args)
       if args.size == 1
@@ -149,4 +163,3 @@ puts "Skip #{x}"
     end
   end
 end
-

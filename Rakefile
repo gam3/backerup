@@ -13,6 +13,8 @@
 require File.dirname(__FILE__) + '/lib/backerup/version.rb'
 require 'rbconfig'
 require 'rake/testtask'
+require 'rdoc/task'
+
 begin
   require 'yard'
 rescue LoadError => x
@@ -28,10 +30,10 @@ task :gem do
   Gem::Builder.new(eval(File.read('backerup.gemspec'))).build
 end
 
-task :doc do |t|
-    `test -x $YARDOC && $YARDOC --plugin minitest-spec lib/ specs/`
-end
-task :docs => :doc
+#task :doc do |t|
+#    `test -x $YARDOC && $YARDOC --plugin minitest-spec lib/ specs/`
+#end
+#task :docs => :doc
 
 desc "Installs the gem"
 task :install => :gem do
@@ -40,16 +42,16 @@ end
 
 desc "Run all tests"
 Rake::TestTask.new(:test) do |t|
-     t.libs << "test"
-     t.test_files = FileList['test/test*.rb']
+    t.libs << "test"
+    t.test_files = FileList['test/test*.rb']
 #     t.verbose = true
 end
 task :tests => :test
 
 desc "Run all specs"
 Rake::TestTask.new(:specs) do |t|
-     t.libs << "specs"
-     t.test_files = FileList[ 'specs/spec_*.rb' ]
+    t.libs << "specs"
+    t.test_files = FileList[ 'specs/spec_*.rb' ]
 end
 task :spec => :specs
 
@@ -57,4 +59,9 @@ YARD::Rake::YardocTask.new do |t|
   t.files   = ['lib/**/*.rb', 'bin/*', 'specs/spec_*.rb' ]   # optional
   t.options = [ '--plugin', 'minitest-spec' ] # optional
 end if YARD
+
+Rake::RDocTask.new do |rd|
+  rd.main = "README.rdoc"
+  rd.rdoc_files.include("README.rdoc", "lib/**/*.rb")
+end
 

@@ -1,5 +1,6 @@
 
 module BackerUp
+  # This class contains the set of Backup objects that describe what will be backedup by backerup
   class Backups
     def initialize(config)
       ret = []
@@ -43,15 +44,19 @@ module BackerUp
         yield entry
       end
     end
+    # This class contains the Backup object that describes a particular
     class Backup
+      # The  active path for the backup
       attr_reader :active_path
+      # The static path for the backup
       attr_reader :static_path
+      # The partial path for the backup
       attr_reader :partial_path
+      # The path for the backup
       attr_reader :path
-      def initialize(args)
+      def initialize(args = {})
         @root = args[:root]
         @host = args[:host]
-#          @config = args[:config] or raise 'no config'
         @active_path = args[:active_path]
         @static_path = args[:static_path]
         raise "no static_path" unless @static_path
@@ -112,3 +117,4 @@ module BackerUp
     end
   end
 end
+
