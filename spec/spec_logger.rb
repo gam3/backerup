@@ -1,9 +1,9 @@
 
-require 'helper'
-
 require 'backerup/logger'
 
-describe BackerUp::Logger do
+require 'helper'
+
+describe BackerUp do
   describe '#logger' do
     it 'returns a nil early' do
       BackerUp::logger.must_be_nil

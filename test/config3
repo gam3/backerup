@@ -1,13 +1,68 @@
 
 hostname('BurkinaFaso') {
-   host('demeter') {
-     bandwidth '50K'
-   }
-   host('burkinaFaso') {
-     bandwidth '1000M'
-   }
+  host('demeter') {
+    bandwidth '50K'
+  }
+  host('burkinaFaso') {
+    bandwidth '1000M'
+  }
 }
 
-host 'bob' begin
-  backup
-end
+hostname('Demeter') {
+  host('demeter') {
+    bandwidth '50K'
+  }
+  host('burkinaFaso') {
+    bandwidth '1000M'
+  }
+}
+
+root '/opt/backerup'
+bandwidth '1000M'
+
+group {
+  backup('burkinaFaso', '/home/gam3') {
+    ip = '10.10.22.6'
+  }
+  backup('burkinaFaso', '/home/') {
+    ip = '10.10.1.6'
+  }
+}
+
+group('bob') {
+  bandwidth '1M'
+  host('zeppo') {
+    bandwidth '100M'
+    backup('/home/gam3') {
+      source '::gam3'
+      exclude '/home/gam3/movies'
+      exclude '/home/gam3/.VirtualBox'
+      exclude '/home/gam3/src/backfire_10.03.1'
+      bandwidth '1000M'
+    }
+  }
+  host('shrive') {
+    backup('/opt') {
+      source '::opt'
+      exclude '/opt/movies'
+    }
+    backup('/opt/backups')
+  }
+  root '/opt/backerup-local/'
+}
+
+group {
+  host('demeter') {
+    backup('/etc') {
+      source '::etc'
+    }
+  }
+  root '/opt/backerup-remote/'
+}
+
+host('bob') {
+  backup('/etc') {
+    source '::etc'
+  }
+}
+

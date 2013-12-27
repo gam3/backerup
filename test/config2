@@ -8,14 +8,12 @@ hostname('BurkinaFaso') {
    }
 }
 
-backerup {
+group {
   host('burkinaFaso') {
     root = '/opt/backerup'
     root '/opt/backerup'
     backup('/home/gam3') {
-      rsync {
-        source_path 'gam3'
-      }
+      source 'gam3'
       exclude '/home/gam3/movies'
       exclude '/home/gam3/.VirtualBox'
       exclude '/home/gam3/src/backfire_10.03.1'
@@ -24,9 +22,7 @@ backerup {
   host('bob') {
     root = '/opt/backerup'
     backup('/home/gam3') {
-      rsync {
-        source_path 'gam3'
-      }
+      source 'gam3'
       exclude '/home/gam3/movies'
       exclude '/home/gam3/.VirtualBox'
       exclude '/home/gam3/src/backfire_10.03.1'

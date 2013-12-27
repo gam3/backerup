@@ -23,7 +23,8 @@ end
 
 #YARD::VERSION.replace(ENV['YARD_VERSION']) if ENV['YARD_VERSION']
 
-task :default => :specs
+#task :default => :specs
+task :default => [ :specs, :test ]
 
 desc "Builds the gem"
 task :gem do
@@ -31,7 +32,7 @@ task :gem do
 end
 
 #task :doc do |t|
-#    `test -x $YARDOC && $YARDOC --plugin minitest-spec lib/ specs/`
+#    `test -x $YARDOC && $YARDOC --plugin minitest-spec lib/ spec/`
 #end
 #task :docs => :doc
 
@@ -50,13 +51,13 @@ task :tests => :test
 
 desc "Run all specs"
 Rake::TestTask.new(:specs) do |t|
-    t.libs << "specs"
-    t.test_files = FileList[ 'specs/spec_*.rb' ]
+    t.libs << "spec"
+    t.test_files = FileList[ 'spec/spec_*.rb' ]
 end
 task :spec => :specs
 
 YARD::Rake::YardocTask.new do |t|
-  t.files   = ['lib/**/*.rb', 'bin/*', 'specs/spec_*.rb' ]   # optional
+  t.files   = ['lib/**/*.rb', 'bin/*', 'spec/spec_*.rb' ]   # optional
   t.options = [ '--plugin', 'minitest-spec' ] # optional
 end if YARD
 

@@ -10,6 +10,14 @@ module BackerUp
   end
   # set of get the logger object
   class <<self
-    attr_accessor :logger
+    # get the logger
+    # get the current logger
+    def logger
+      @logger
+    end
+    # set the current logger
+    def logger=(x)
+      @logger = x
+    end
   end
 end

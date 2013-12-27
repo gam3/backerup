@@ -2,6 +2,8 @@
 require 'fileutils'
 require 'open3'
 
+require 'digest/sha1'
+
 require 'backerup/configure'
 configure = BackerUp::Configure.new
 
@@ -12,10 +14,10 @@ module BackerUp
     attr_reader :thread
     # access the list of current running threads
     attr_reader :current
-    def initialize(config)
-      @config = config
-      @verbose = false
-      @started = nil
+    attr_reader :pid
+    def initialize(backup)
+      @backup = backup
+      @pid = nil
     end
     # is the collector due to run
     def due?
@@ -46,14 +48,6 @@ module BackerUp
       BackerUp.logger
     end
     # run the collector in syncronous mode
-    def run
-      if @thread
-        return nil
-      end
-      thread = trun
-      thread.join if thread
-      @thread = nil
-    end
     def stop
       @stop = true
     end
@@ -62,14 +56,13 @@ module BackerUp
       @pid = nil
     end
     # run the collector in asyncronous mode
-    def trun
-      backup = @config
-
+    def trun()
+      backup = @backup
       begin
         FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
         FileUtils.mkdir_p( backup.static_path, :mode => 0755 )
       rescue => x
-        logfile.error "unable to create directory #{x}"
+        logfile.error "unable to create directory #{x.class}"
         return
       end
       if backup.partial_path
@@ -144,6 +137,16 @@ module BackerUp
                             end
                           end
                         when 'file'
+			  if File.exist?(backup.inode_path)
+			    digest = Digest::SHA1.new
+			    File.open(src) do |file|
+			      digest << file.read
+			    end
+			    if digest
+
+puts "Digest #{digest}"
+			    end
+			  end
                           begin
                             if File.exists?(dst)
                               if File.directory? dst
@@ -215,6 +218,14 @@ module BackerUp
         @thread = nil
         @stop = false
       end # Thread
-    end # def run
+    end # def trun
+    def run
+      if @thread
+        return nil
+      end
+      thread = trun
+      thread.join if thread
+      @thread = nil
+    end
   end # class Collector
 end # module

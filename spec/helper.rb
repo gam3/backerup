@@ -1,5 +1,5 @@
 
-#require 'minitest/spec'
+require 'minitest/spec'
 require 'minitest/autorun'
 
 if ENV['COVERAGE'] == 'test'
@@ -9,3 +9,4 @@ if ENV['COVERAGE'] == 'test'
     add_filter "/specs/"
   end
 end
+

@@ -1,20 +1,12 @@
 
-hostname('BurkinaFaso') {
-   host('demeter') {
-     bandwidth '50K'
-   }
-   host('burkinaFaso') {
-     bandwidth '1000M'
-   }
-}
-
-root '/opt/backerup'
-
-backerup {
-  host('burkinaFaso') {
+group {
+  bandwidth '1M'
+  host('zeppo') {
+    bandwidth '100M'
     backup('/home/gam3') {
-      rsync {
-        source_path 'gam3'
+      bandwidth '10M'
+      source('::gam3') {
+        bandwidth '10K'
       }
       exclude '/home/gam3/movies'
       exclude '/home/gam3/.VirtualBox'

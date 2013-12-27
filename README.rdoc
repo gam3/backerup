@@ -1,0 +1,8 @@
+= BackerUp 0.0.2
+
+BackerUp is a backup utility designed specifily for the remote backup of filesystems.  It currently uses rsync to accomplish this.
+
+== Usage
+
+In normal usage you edit the /etc/backerups.conf as needed and then run the backerups utility
+
