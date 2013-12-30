@@ -82,17 +82,15 @@ module BackerUp
         @host = host
         puts "no host for #{@path}" unless @host
         @excludes = Array.new
-        @evals = []
+        @eval = []
         @set = {}
 	@defaults = defaults
       end
+      include Common
       # Create or update the backup
       def expand
         backup = Backups.instance.get(@host, @path)
 	backup.set_defaults @defaults
-      end
-      def defaults
-        @defaults
       end
       # Add a source for a particular backup, this
       # @return [Configure::Source] The Source object
@@ -101,11 +99,8 @@ module BackerUp
       # is the same as
       #   backup('bob', '/etc')
       #   source('bob', '/etc', '::etc')
-      def bandwidth(bw)
-        @set[:bandwidth] = bw
-      end
       def source(source, &block)
-        config = Configure::Source.new(@host, @path, source, self.defaults)
+        config = Configure::Source.new(@host, @path, source, @defaults)
 	if block
 	  config.instance_eval &block
 	end
@@ -278,19 +273,22 @@ puts "FIXME #{e}"
           end
 	end
       end
-      def backup(name, path, &block)
+      def backup(hostname, path, &block)
 	if block
-	  @eval.push [:backup, host, path, block]
+	  @eval.push [:backup, hostname, path, block]
 	else
-	  @eval.push [:backup, host, path, nil ]
+	  @eval.push [:backup, hostname, path, nil ]
 	end
+	return self
       end
+      # Add a source using the group defaults
       def source(host, base_path, source_path, &block)
 	if block
 	  @eval.push [:source, host, base_path, source_path, block]
 	else
 	  @eval.push [:source, host, base_path, source_path, nil ]
 	end
+	self
       end
       def host(name, &block)
 	if block

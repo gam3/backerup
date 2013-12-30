@@ -127,10 +127,9 @@ module BackerUp
     end
 
     def copy
+      require 'backerup/copier'
       logfile.debug "Starting backerup copy"
-      puts DateTime.now.strftime("%Y%m%d%H%M%S")
-pp @configuration
-      BackerUp::AppCopier.new
+      BackerUp::AppCopier.run
     end
 
     def backup

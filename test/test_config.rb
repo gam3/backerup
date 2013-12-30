@@ -15,15 +15,18 @@ class TestConfigure < MiniTest::Unit::TestCase
     File.open('test/config1', 'r') do |file|
       data = file.read
       @configureation.top data, 'test/config1'
-#pp      BackerUp::Backups.instance
     end
   end
   def test_configure2
-#    skip
     File.open('test/config2', 'r') do |file|
       data = file.read
       @configureation.top data, 'test/config2'
-#pp @configureation
+    end
+  end
+  def test_configure3
+    File.open('test/config3', 'r') do |file|
+      data = file.read
+      @configureation.top data, 'test/config3'
     end
   end
 end

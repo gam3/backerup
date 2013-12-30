@@ -41,6 +41,18 @@ module BackerUp
     def initialize
       @hash = Hash.new { |h, k| h[k] = Hash.new }
     end
+    def roots
+      ret = Set.new
+      @hash.each do |host, backup|
+	backup.each do |path, data|
+	  ret.add data.root
+	end
+      end
+      ret.to_a
+    end
+    def self.roots
+      return instance.roots
+    end
     def configure(x, y)
 raise "#{self} # configure"
       @hash[x][y] ||= BackerUp::Backup.new(x, y)
@@ -130,7 +142,10 @@ raise "#{self} # configure"
     end
     def set_defaults(d)
       @defaults = d
-      @exclude_paths << d[:excludes]
+      d[:excludes] ||= Array.new
+      d[:excludes].each do |path|
+        @exclude_paths << path
+      end
     end
     # Access to the logger
     def logfile
