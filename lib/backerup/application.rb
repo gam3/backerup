@@ -120,16 +120,21 @@ module BackerUp
     end
 
     def clean
+      require 'backerup/cleaner'
       logfile.info "Starting backerup cleaner"
       logfile.info DateTime.now.strftime()
       roots = Backups.instance.get_roots
-      BackerUp::AppCleaner.new(roots).run
+      BackerUp::AppCleaner.run
     end
 
     def copy
       require 'backerup/copier'
       logfile.debug "Starting backerup copy"
-      BackerUp::AppCopier.run
+      if options.dryrun
+        BackerUp::AppCopier.dry_run()
+      else
+        BackerUp::AppCopier.run()
+      end
     end
 
     def backup
