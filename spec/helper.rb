@@ -1,12 +1,13 @@
 
-require 'minitest/spec'
-require 'minitest/autorun'
-
 if ENV['COVERAGE'] == 'test'
   require 'simplecov'
   SimpleCov.start do
-    add_filter "/test/"
+    command_name 'Minitest::Spec'
+#    add_filter "/test/"
     add_filter "/spec/"
   end
 end
+
+require 'minitest/autorun'
+require 'minitest/spec'
 

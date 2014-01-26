@@ -51,6 +51,14 @@ group('bob') {
   root '/opt/backerup-local/'
 }
 
+source('bob', '/home/gam3', '::gam3')
+source('bill', '/home/gam3', '::gam3') {
+   backup('src')
+   backup('/home/gam3')
+}
+
+group
+
 group {
   host('demeter') {
     backup('/etc') {
@@ -66,3 +74,11 @@ host('bob') {
   }
 }
 
+host('bob') {
+  skip
+  group
+}
+
+host('bobby') {
+  group
+}

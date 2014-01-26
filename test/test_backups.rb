@@ -21,7 +21,8 @@ class TestBackup < MiniTest::Unit::TestCase
       :partial => true
     )
 
-    assert_equal('rsync -a --out-format=%i|%n --delete --partial --partial-dir=/opt/backerup/.partial/demeter/etc/q --bwlimit=5000 --exclude=bob/bob --exclude=bill demeter::etc/q/. /opt/backerup/.active/demeter/etc/q',
+    assert_equal(
+    'rsync --archive --update --out-format=%i|%n|%l|%C --delete --partial --partial-dir=/opt/backerup/.partial/demeter/etc/q --bwlimit=5000 --exclude=bob/bob --exclude=bill demeter::etc/q/. /opt/backerup/.active/demeter/etc/q',
                   backup.command.map{ |x| x }.join(' '))
   end
 end

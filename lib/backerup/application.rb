@@ -4,7 +4,6 @@ require 'optparse'
 require 'ostruct'
 require 'backerup/version'
 require 'backerup/configure'
-require 'backerup/collector'
 require 'backerup/backups'
 require 'backerup/logger'
 require 'shellwords'
@@ -23,12 +22,14 @@ module BackerUp
 
     # The location where BackerUp was run from
     attr_reader :original_dir
-
+    # initialize 
     def initialize
       @original_dir = Dir.getwd 
       @options = OpenStruct.new
       case File.basename($0)
       when 'backerup'
+        options.app = 'daemon'
+      when 'backerup-collector'
         options.app = 'backup'
       when 'backerup-clean'
         options.app = 'clean'
@@ -37,6 +38,7 @@ module BackerUp
       end
     end
 
+    # get the configuration
     def read_configuration(filename)
       configureation = Configure.new()
       File.open(filename, 'r') do |file|
@@ -46,10 +48,12 @@ module BackerUp
       configureation
     end
 
+    # get the logfile
     def logfile
       BackerUp.logger
     end
 
+    # run
     def run(*args)
       @name = $0
       @configure ||= Array.new
@@ -110,6 +114,8 @@ module BackerUp
       end
 
       case options.app
+      when 'daemon'
+        daemon
       when 'backup'
         backup
       when 'clean'
@@ -119,14 +125,18 @@ module BackerUp
       end
     end
 
+    # clean once
     def clean
       require 'backerup/cleaner'
       logfile.info "Starting backerup cleaner"
-      logfile.info DateTime.now.strftime()
-      roots = Backups.instance.get_roots
-      BackerUp::AppCleaner.run
+      if options.dryrun
+        BackerUp::AppCleaner.dry_run()
+      else
+        BackerUp::AppCleaner.run()
+      end
     end
 
+    # clean once
     def copy
       require 'backerup/copier'
       logfile.debug "Starting backerup copy"
@@ -137,53 +147,43 @@ module BackerUp
       end
     end
 
+    # clean once
     def backup
-      backups = Backups.instance
-
-      logfile.debug "Starting backerup"
-
-      all  = Array.new
-
-      at_exit do
-        all.each do |c|
-	  if c.pid
-	    Process.kill("TERM", c.pid)
-	  end
-	end
-	exit
-      end
-
+      require 'backerup/collector'
+      logfile.debug "Starting backerup backup"
       if options.dryrun
-        backups.each do |backup|
-          puts backup.command.map{ |x| Shellwords.escape(x) }.join(' ')
-        end
-        exit(0)
-      end
-
-      change = false
-
-      backups.each do |backup|
-        all.push Collector.new(backup)
-      end
-
-      while true
-        all.each do |c|
-          if c.due?
-            t = c.trun
-            logfile.info "Started #{ t }"
-            change = true
-          end
-        end
-        if change
-          all.each do |c|
-puts "Change #{c}"
-          end
-        end
-	change = false
-        sleep 10
+        BackerUp::AppCollector.dry_run()
+      else
+        BackerUp::AppCollector.run()
       end
     end
 
+    # run as a daemon
+    def daemon
+      require 'backerup/collector'
+      require 'backerup/cleaner'
+      require 'backerup/copier'
+      logfile.debug "Starting backerup daemon"
+      if options.dryrun
+        Roots.each do |root|
+	  puts "copy #{root}"
+	  puts "clean #{root}"
+	end
+        Backups.each do |backup|
+	  puts "collect from #{backup}"
+	end
+      else
+        @threads = []
+        Roots.each do |root|
+          @threads.push BackerUp::AppCleaner.trun(root)
+          @threads.push BackerUp::AppCopier.trun(root)
+	end
+        Backups.each do |backup|
+          @threads.push BackerUp::AppCollector.trun(backup)
+	end
+      end
+    end
+    # get options
     def options
       @options ||= OpenStruct.new
     end
@@ -254,6 +254,12 @@ puts "Change #{c}"
           "Run the backerup process",
           lambda { |value|
             options.app = 'backup'
+          }
+        ],
+        [ '--daemon',
+          "Run the backerup process",
+          lambda { |value|
+            options.app = 'daemon'
           }
         ],
       ]

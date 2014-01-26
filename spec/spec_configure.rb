@@ -3,7 +3,7 @@ require 'helper'
 require 'backerup/configure'
 
 describe BackerUp::Hostname do
-  describe '#hostname' do
+  describe '.hostname' do
     it 'it returns a string' do
       BackerUp::Hostname.hostname.must_be_instance_of String
       BackerUp::Hostname.hostname.must_be_instance_of String
@@ -14,17 +14,6 @@ end
 describe BackerUp::Configure::Group do
   before do
     @c= BackerUp::Configure::Group.new({})
-  end
-  describe '#hostname' do
-    it 'requires a hostname' do
-      lambda { @c.hostname() }.must_raise ArgumentError
-    end
-    it 'must return true for current host' do
-      @c.hostname(BackerUp::Hostname.hostname).must_equal true
-    end
-    it 'return false for other host' do
-      @c.hostname('not_test').must_equal false
-    end
   end
   describe '#host' do
     it 'throws an exception with no arguments' do
@@ -56,11 +45,12 @@ describe BackerUp::Configure::Group do
     end
   end
   describe '#backup' do
-    it 'throws an exception with no arguments' do
+    it 'throws an exception without exactly 2 arguments' do
       lambda { @c.backup }.must_raise ArgumentError
-    end
-    it 'requires only hostname an sourse' do
       lambda { @c.backup('bob', '/bob', 'extra') }.must_raise ArgumentError
+    end
+    it 'returns a Group Object' do
+      @c.backup('bob', '/bob').must_be_instance_of BackerUp::Configure::Group
     end
     it 'pushes data on to the @eval list' do
       @c.instance_variable_get('@eval').size.must_equal 0
@@ -68,9 +58,34 @@ describe BackerUp::Configure::Group do
       @c.instance_variable_get('@eval').size.must_equal 1
     end
   end
+end
+
+describe BackerUp::Configure::Common do
+# these are defined in the Common Module
+  before do
+    post_class = Class.new
+    post_class.class_eval <<EOF
+include BackerUp::Configure::Common
+def initialize
+ @skipped_hostsnames = Array.new
+end
+EOF
+    @c = post_class.new
+  end
   describe '#skip' do
-    it 'throws an exception' do
-      lambda { @c.skip }.must_raise BackerUp::Configure::Skip
+    it 'throws an Skip Exception' do
+      lambda { @c.skip() }.must_raise BackerUp::Configure::Skip
+    end
+  end
+  describe '#hostname' do
+    it 'requires a hostname' do
+      lambda { @c.hostname() }.must_raise ArgumentError
+    end
+    it 'must return true for current host' do
+      @c.hostname(BackerUp::Hostname.hostname).must_equal true
+    end
+    it 'return false for other host' do
+      @c.hostname('not_test').must_equal false
     end
   end
 end

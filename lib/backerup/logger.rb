@@ -13,6 +13,9 @@ module BackerUp
     # get the logger
     # get the current logger
     def logger
+      if @logger.nil?
+	@logger = Logger::Logger.new('/tmp/backerup.log')
+      end
       @logger
     end
     # set the current logger

@@ -1,18 +1,17 @@
+require 'helper'
 
 require 'backerup/logger'
 
-require 'helper'
-
-describe BackerUp do
-  describe '#logger' do
+describe 'BackerUp' do
+  describe '.logger' do
     it 'returns a nil early' do
-      BackerUp::logger.must_be_nil
+      BackerUp.logger.must_be_instance_of BackerUp::Logger::Logger
     end
   end
-  describe '#logger=' do
+  describe '.logger=' do
     it 'can be set' do
-      BackerUp::logger = 'bob'
-      BackerUp::logger.must_equal 'bob'
+      BackerUp.logger = 'bob'
+      BackerUp.logger.must_equal 'bob'
     end
   end
 end

@@ -4,19 +4,33 @@ module BackerUp
   # This singleton contains all the Sources.
   # A source is a triple of host, path, source
   class Sources
+    # Initialize the Sources singleton
     def initialize
       @pth = Hash.new { |h, k| h[k] = Hash.new }
       @src = Hash.new { |h, k| h[k] = Hash.new }
     end
     include Singleton
+    # clear all the sources
+    def clear
+      @pth.clear
+      @src.clear
+    end
+    # clear all the sources
+    def self.clear
+      instance.clear
+    end
+    # get the source for a given host, path, source
     def get(host, path, source)
       path = File.expand_path(path)
-      if @pth[host][path] || @src[host][source]
+      if @pth[host][path] && @src[host][source]
+        @src[host][source]
+      elsif @pth[host][path] || @src[host][source]
         raise "Multiple sources for #{host}#{source}" unless @pth[host][path] == @src[host][source]
       else
         @src[host][source] = @pth[host][path] = Source.new(host, path, source)
       end
     end
+    # get each path for a host
     def each_path(host = nil)
       hosts = host ? [ host ] : @pth.keys
       hosts.each do |host|
@@ -25,6 +39,7 @@ module BackerUp
 	end
       end
     end
+    # get each source for a host and path
     def get_source(host, path)
       source = nil
       @pth[host].keys.sort{ |a,b| b.size <=> a.size }.each do |match_path|
@@ -34,13 +49,19 @@ module BackerUp
       end
       return source
     end
+    # get the source for a given host, path, source
+    def self.get(host, path, source)
+      instance.get(host, path, source)
+    end
   end
   # This singleton contains all the Backups.
   # A backup is a tuple of host, and path
   class Backups
+    # Initialize
     def initialize
       @hash = Hash.new { |h, k| h[k] = Hash.new }
     end
+    # return all the roots for all the backups
     def roots
       ret = Set.new
       @hash.each do |host, backup|
@@ -50,19 +71,27 @@ module BackerUp
       end
       ret.to_a
     end
+    # return all the roots for all the backups
     def self.roots
       return instance.roots
     end
-    def configure(x, y)
-raise "#{self} # configure"
-      @hash[x][y] ||= BackerUp::Backup.new(x, y)
-      @hash[x][y].configure
-    end
     include Singleton
-    def get(x, y)
-      @hash[x][y] ||= BackerUp::Backup.new(x, y)
-      @hash[x][y]
+    # clear the Backups 
+    def clear
+      @hash.clear
+      Sources.clear
+      Hosts.clear
     end
+    # clear the Backups 
+    def self.clear
+      instance.clear
+    end
+    # get a particular backup
+    def get(host, path)
+      @hash[host][path] ||= BackerUp::Backup.new(host, path)
+      @hash[host][path]
+    end
+    # get each path for a host or all hosts
     def each_path(host = nil)
       hosts = host ? [ host ] : @hash.keys
       hosts.each do |host|
@@ -71,16 +100,20 @@ raise "#{self} # configure"
 	end
       end
     end
+    # get a backup
     def [](x, y)
       @hash[x][y] ||= Host::Backup.new(x, y)
       @hash[x][y]
     end
+    # set a backup
     def []=(x, y)
       @hash[x][y] = z
     end
+    # get all of the hosts
     def hosts
       @hash.keys
     end
+    # get each backup
     def each(&b)
       @hash.each do |host, data|
         data.each do |path, backup|
@@ -88,6 +121,11 @@ raise "#{self} # configure"
 	end
       end
     end
+    # get each backup
+    def self.each(&b)
+      instance.each &b
+    end
+    # get all the roots
     def get_roots
       ret = Set.new
       @hash.each_key do |host|
@@ -97,24 +135,82 @@ raise "#{self} # configure"
       end
       ret.to_a
     end
+    # get a backup
+    def self.get(*e)
+      instance.get(*e)
+    end
   end
   # This singleton contains all the Host.
   class Hosts
+    # Initialize
     def initialize
       @hash = Hash.new { |h, k| h[k] = Host.new(k) }
       @evals = []
     end
     include Singleton
+    # clear the hosts
+    def clear
+      @hash.clear
+      @evals.clear
+    end
+    # clear the hosts
+    def self.clear
+      instance.clear
+    end
+    # get a host
     def [](x)
       @hash[x]
     end
+    # set a host
     def []=(x, y)
       @hash[x] = y
     end
+    # get each host
     def each(&b)
       @hash.each_key do |key|
         b.yield key
       end
+    end
+  end
+  # This singleton contains all or the Root Paths
+  class Roots
+    # Initialize
+    def initialize
+      @hash = Hash.new { |h, k| h[k] = Root.new(k) }
+      @evals = []
+    end
+    include Singleton
+    # clear the hosts
+    def self.clear
+      @hash.clear
+    end
+    # get a root
+    def [](x)
+      @hash[x]
+    end
+    # get the source for a given host, path, source
+    def get(path)
+      @hash[path]
+    end
+    # get the source for a given host, path, source
+    def self.get(path)
+      instance.get(path)
+    end
+    # get each root
+    def each(&b)
+      ret = self
+      if b
+	@hash.each_key do |key|
+	  b.yield key
+	end
+      else
+	ret = @hash.each_key.to_a
+      end
+      ret
+    end
+    # get each root
+    def self.each(&b)
+      instance.each &b
     end
   end
   # This class contains the Backup object that describes a
@@ -137,9 +233,15 @@ raise "#{self} # configure"
       @exclude_paths = []
       @active_path = "/tmp/.active"
     end
+    # to_s
+    def to_s
+       "backup: #{host} '#{path}' '#{source.to_s}'"
+    end
+    # add and exclude path to a backup
     def add_exclude(xlist)
       @exclude_paths << xlist
     end
+    # set the defaults for a backup
     def set_defaults(d)
       @defaults = d
       d[:excludes] ||= Array.new
@@ -151,6 +253,7 @@ raise "#{self} # configure"
     def logfile
       BackerUp.logger
     end
+    # get the bwlimit for a backup
     def bwlimit
       @bwlimit
     end
@@ -161,21 +264,27 @@ raise "#{self} # configure"
     def bwlimit
       '5000'
     end
+    # get the root path for a backup
     def root
       '/opt/backerup'
     end
+    # get the static path for a backup
     def partial_path
       File.join(self.root, '.partial', @host, @path)
     end
+    # get the static path for a backup
     def active_path
       File.join(self.root, '.active', @host, @path)
     end
+    # get the static path for a backup
     def static_path
       File.join(self.root, '.static', @host, @path)
     end
+    # get the inode path for a backup
     def inode_path
-      File.join(self.root, '.inodes', @host, @path)
+      File.join(self.root, '.inodes')
     end
+    # get the source
     def source
       source = Sources.instance.get_source(@host, @path)
       return nil unless source
@@ -208,12 +317,14 @@ raise "#{self} # configure"
     end
 
     # Generate the rsync command for the backup
-    # @returns Array the arguments list
+    # @return [Array] the arguments list
     def command
       ret = []
       ret.push 'rsync'
-      ret.push '-a'
-      ret.push '--out-format=%i|%n'
+#      ret.push '/home/gam3/src/rsync/rsync'
+      ret.push '--archive'
+      ret.push '--update'
+      ret.push '--out-format=%i|%n|%l|%C'
       ret.push '--delete'
       if self.partial? && (partial_path = self.partial_path)
 	ret.push '--partial'
@@ -234,16 +345,21 @@ raise "#{self} # configure"
   end
   # The Source class describes how to get a backup over the network.
   class Source
+    # the host
     attr_reader :host
+    # the path of the source
     attr_reader :path
-    def initialize(a, path, c)
-      @host = a
+    # Initialize
+    def initialize(host, path, source)
+      @host = host
       @path = File.expand_path(path)
-      @source = c
+      @source = source
     end
+    # set defaults
     def set_defaults(defaults)
       @defaults = defaults
     end
+    # get the source string
     def source
       if @source[0] == ':'
         @host + @source
@@ -254,5 +370,20 @@ raise "#{self} # configure"
   end
   # The Host class holds information for a given device
   class Host
+    # the name of the host
+    attr_reader :name
+    # Initialize
+    def initialize(host)
+      @name = host
+    end
+  end
+  # The Root class holds information for a given root
+  class Root
+    # the path to the root
+    attr_reader :path
+    # initialize
+    def initialize(root_path)
+      @path = root_path
+    end
   end
 end
