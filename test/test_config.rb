@@ -43,3 +43,4 @@ class TestConfigure < MiniTest::Unit::TestCase
     end
   end
 end
+

@@ -18,8 +18,8 @@ end
 describe BackerUp::Copier do
   before do
     @mock = MiniTest::Mock.new
-    @mock.expect(:roots, [ 'bob' ])
-    @c = BackerUp::Copier.new @mock
+    @mock.expect(:path, [ 'bob' ])
+    @c = BackerUp::Copier.new @mock, :dryrun => true
   end
   describe '#dry_run' do
     it 'takes a single argument' do
@@ -31,12 +31,12 @@ end
 describe "BackerUp::Copier" do
   before do
     @mock = MiniTest::Mock.new
-    @mock.expect(:roots, [ '/opt/backerup/bob', '/opt/backerup/bill' ])
+    @mock.expect(:path, '/opt/backerup/bob')
     @c = BackerUp::Copier.new @mock
   end
   describe '#dry_run' do
     it 'it outputs a string' do
-       lambda { @c.dry_run }.must_output %r"cp -rl /opt/backerup/bob/.static /opt/backerup/bob/.copy\ncp -rl /opt/backerup/bill/.static /opt/backerup/bill/.copy\nmv /opt/backerup/bob/.copy /opt/backerup/bob/hourly-[0-9]*\nmv /opt/backerup/bill/.copy /opt/backerup/bill/hourly-[0-9]*\n"
+       lambda { @c.dry_run }.must_output %r"cp -rl /opt/backerup/bob/.static /opt/backerup/bob/.copy\n"
     end
   end
 end
@@ -44,7 +44,7 @@ end
 describe "BackerUp::Copier" do
   before do
     @mock = MiniTest::Mock.new
-    @mock.expect(:roots, [ File.join('/tmp/backerup_test', "%05d" % (rand * 1000).round.to_s) ])
+    @mock.expect(:path, File.join('/tmp/backerup_test', "%05d" % (rand * 1000).round.to_s))
     @c = BackerUp::Copier.new @mock
     @output = ""
     BackerUp.logger = BackerUp::Logger::Logger.new(StringIO.open(@output,'w'))
@@ -69,8 +69,8 @@ describe "BackerUp::Copier" do
     %w( A B C D E F ).each do |name|
       FileUtils.touch(File.join(@source, name))
     end
-    @mock.expect(:roots, [ @root ])
-    @c = BackerUp::Copier.new @mock
+    @mock.expect(:path, @root)
+    @c = BackerUp::Copier.new @mock, :dry_run => true
     @output = ""
     BackerUp.logger = BackerUp::Logger::Logger.new(StringIO.open(@output,'w'))
   end
@@ -91,7 +91,7 @@ describe "BackerUp::Copier" do
     %w( A B C D E F ).each do |name|
       FileUtils.touch(File.join(@source, name))
     end
-    @mock.expect(:roots, [ @root ])
+    @mock.expect(:path, @root)
     @c = BackerUp::Copier.new @mock
     @output = ""
     BackerUp.logger = BackerUp::Logger::Logger.new(StringIO.open(@output,'w'))

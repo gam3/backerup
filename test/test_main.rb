@@ -7,6 +7,6 @@ require 'backerup/version'
 
 class TestVersion < MiniTest::Unit::TestCase
   def test_version
-    assert_equal('0.0.2', BackerUp::VERSION)
+    assert_equal('0.0.3', BackerUp::VERSION)
   end
 end

@@ -1,3 +1,6 @@
+# Author::    "G. Allen Morris III" (mailto:gam3@gam3.net)
+# Copyright:: Copyright (c) 2013-2014 G. Allen Morris III
+# License::   GPL 2.0
 require 'date'
 require 'time'
 require 'fileutils'
@@ -9,27 +12,16 @@ module BackerUp
   # This class contains the collector application of backerup system
   class AppCleaner
     # do a dry run of the cleaner app
-    def self.dry_run
-      self.run(true)
+    def self.dry_run(root)
+      self.run(root, :dryrun => true)
     end
     # run of the cleaner app
-    def self.run(dry_run = false)
-      @roots = Array.new
-      Backups.roots.each do |root|
-        @roots.push root
-      end
-      threads = Array.new
-      @roots.each do |root|
-        threads.push Thread.new { 
-	  Cleaner.new(root, dry_run).clean
-	}
-      end
-      while threads.size > 0
-	threads = threads.find_all { |thread| !thread.join(1) }
-      end
+    def self.run(root, extra = {})
+      cleaner = Cleaner.new(root, extra)
+      cleaner.run
     end
-    def self.trun(root)
-      Cleaner.new(root).trun
+    def self.trun(root, extra = {})
+      Cleaner.new(root, extra).trun
     end
   end
   # Clean up the backup by sieving the directories
@@ -48,22 +40,34 @@ module BackerUp
       we.clean
     end
     # initialize
-    def initialize(root, dry_run = false)
+    def initialize(root, extra = {})
       @root = root;
-      @dry_run = dry_run
-      @now = Time.now()
+      @dry_run = extra[:dryrun]
       @config = @@config
+      @extra = extra
     end
-    # run as daemaon that cleans a root periodicly
+    def verbose?
+      !!@extra['verbose']
+    end
+    # run as daemaon that cleans the root periodicly
+    def stop
+      @running = nil
+    end
     def trun
-      Thread.new { 
+      @thread = Thread.new { 
         @running = true
+	x = rand * 3600
+	puts "delaying cleaner by #{x/60} minutes" if verbose?
+	sleep x
         while @running
-          Cleaner.clean
-	  sleep 3600
-	  puts "cleaning"
+	  puts "Cleaning" if verbose?
+          run
+	  x = 3600 + rand * 3600
+	  puts "next clean in #{x/60} minutes" if verbose?
+	  sleep x
 	end
       }
+      self
     end
     # get the strftime string for the type
     def type_sieve(type, time)
@@ -214,9 +218,9 @@ module BackerUp
     end
 
     # clean
-    def clean
-      root = @root
-      now = Time.now()
+    def run
+      root = @root.path
+      @now = Time.now()
       parts = @@types.join(',')
       match = "{#{parts}}-#{"[0-9]" * 14 }"
       regexp = /(#{@@types.join('|')})-([0-9]+$)/

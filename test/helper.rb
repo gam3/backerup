@@ -1,3 +1,4 @@
+puts "TEST"
 
 if ENV['COVERAGE'] == 'test'
   require 'simplecov'

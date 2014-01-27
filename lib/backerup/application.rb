@@ -1,5 +1,6 @@
-require 'pp'
-
+# Author::    "G. Allen Morris III" (mailto:gam3@gam3.net)
+# Copyright:: Copyright (c) 2013-2014 G. Allen Morris III
+# License::   GPL 2.0
 require 'optparse'
 require 'ostruct'
 require 'backerup/version'
@@ -78,7 +79,6 @@ module BackerUp
              end
           end
         end
-
         if options.logfile_name.class == String
           dirname = File.dirname(options.logfile_name)
 
@@ -123,38 +123,42 @@ module BackerUp
       when 'copy'
         copy
       end
+
+      logfile.info "Stopping backerup service"
     end
 
     # clean once
     def clean
       require 'backerup/cleaner'
       logfile.info "Starting backerup cleaner"
-      if options.dryrun
-        BackerUp::AppCleaner.dry_run()
-      else
-        BackerUp::AppCleaner.run()
+      Roots.each do |root|
+	BackerUp::AppCleaner.run(root, :dryrun => options.dryrun, :verbose => options.verbose)
       end
     end
 
-    # clean once
+    # copy once
     def copy
       require 'backerup/copier'
       logfile.debug "Starting backerup copy"
-      if options.dryrun
-        BackerUp::AppCopier.dry_run()
-      else
-        BackerUp::AppCopier.run()
+      Roots.each do |root|
+	if options.dryrun
+	  BackerUp::AppCopier.dry_run(root)
+	else
+	  BackerUp::AppCopier.run(root)
+	end
       end
     end
 
-    # clean once
+    # collect once
     def backup
       require 'backerup/collector'
       logfile.debug "Starting backerup backup"
-      if options.dryrun
-        BackerUp::AppCollector.dry_run()
-      else
-        BackerUp::AppCollector.run()
+      Backups.each do |backup|
+        if options.dryrun
+          BackerUp::AppCollector.dry_run(backup)
+        else
+          BackerUp::AppCollector.run(backup)
+        end
       end
     end
 
@@ -163,7 +167,34 @@ module BackerUp
       require 'backerup/collector'
       require 'backerup/cleaner'
       require 'backerup/copier'
-      logfile.debug "Starting backerup daemon"
+
+      @threads = []
+
+      logfile.info "Starting backerup service"
+
+      Signal.trap("INT") do
+	puts "INT II"
+	exit(1)
+      end
+      Signal.trap("QUIT") do
+	puts "QUIT II"
+	exit(1)
+      end
+      Signal.trap("TERM") do
+	puts "TERM II"
+	exit(1)
+      end
+
+      at_exit do
+        @threads.each do |c|
+	  begin
+	    c.stop
+	  rescue => x
+	    logfile.debug "error in exit #{x}"
+	  end
+        end
+        logfile.info "Stopped backerup cleaner"
+      end
       if options.dryrun
         Roots.each do |root|
 	  puts "copy #{root}"
@@ -173,13 +204,15 @@ module BackerUp
 	  puts "collect from #{backup}"
 	end
       else
-        @threads = []
         Roots.each do |root|
           @threads.push BackerUp::AppCleaner.trun(root)
           @threads.push BackerUp::AppCopier.trun(root)
 	end
         Backups.each do |backup|
           @threads.push BackerUp::AppCollector.trun(backup)
+	end
+	while @threads
+	  sleep 60
 	end
       end
     end

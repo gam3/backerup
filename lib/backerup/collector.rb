@@ -1,4 +1,6 @@
-
+# Author::    "G. Allen Morris III" (mailto:gam3@gam3.net)
+# Copyright:: Copyright (c) 2013-2014 G. Allen Morris III
+# License::   GPL 2.0
 require 'fileutils'
 require 'open3'
 
@@ -18,65 +20,18 @@ module BackerUp
       all  = Array.new
 
       backups.each do |backup|
-	puts backup.command.map{ |x| Shellwords.escape(x) }.join(' ')
+        puts backup.command.map{ |x| Shellwords.escape(x) }.join(' ')
       end
     end
     # run the backups
-    def self.run
-      backups = Backups.instance
-
-      all  = Array.new
-
-      Signal.trap("INT") do
-	puts "INT II"
-	exit(1)
-      end
-      Signal.trap("QUIT") do
-	puts "QUIT II"
-	exit(1)
-      end
-      Signal.trap("TERM") do
-	puts "TERM II"
-	exit(1)
-      end
-
-      at_exit do
-puts "EXIT"
-        all.each do |c|
-	  if c.pid
-puts "#{c.pid}"
-	    begin
-	      Process.kill("TERM", c.pid)
-	    rescue
-	      # don't care
-	    end
-	  end
-	end
-	exit
-      end
-
-      change = false
-
-      backups.each do |backup|
-        all.push Collector.new(backup)
-      end
-
-      while true
-        all.each do |c|
-          if c.due?
-            t = c.trun
-#            logfile.info "Started #{ t }"
-            change = true
-          end
-        end
-        if change
-          all.each do |c|
-puts "Change #{c}"
-          end
-        end
-	change = false
-        sleep 10
-      end
+    def self.trun(backup, extra = {})
+      c = Collector.new(backup)
+      t = c.trun
+      return t
+    end
+    def self.run(backup)
+      c = Collector.new(backup)
+      t = c.run
     end
   end
   # There is one instance of this class for each backup
@@ -88,13 +43,9 @@ puts "Change #{c}"
     # the pid
     attr_reader :pid
     # initialize
-    def initialize(backup)
+    def initialize(backup, extra = {})
       @backup = backup
       @pid = nil
-    end
-    # Call this method will create a thread that will run until stopped 
-    def daemon
-puts "daemon"
     end
     # is the collector due to run
     def due?
@@ -126,15 +77,32 @@ puts "daemon"
     end
     # run the collector in syncronous mode
     def stop
-      @stop = true
+      if @pid
+        System.kill @pid
+      end
     end
     # kill this cleaner
     def kill
       Process.kill 'TERM', @pid
       @pid = nil
     end
+
     # run the collector in asyncronous mode
-    def trun()
+    def trun
+      @thread = Thread.new {
+        @running = true
+        while @running
+          sleep 600 + rand * 600
+logfile.info "start backup of #{@backup}"
+          run
+logfile.info "end backup of #{@backup}"
+          run
+        end
+      }
+      self
+    end
+
+    def run
       backup = @backup
       begin
         FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
@@ -146,40 +114,40 @@ puts "daemon"
       if backup.partial_path
         begin
           FileUtils.mkdir_p( backup.partial_path, :mode => 0755 )
-	rescue => x
-	  logfile.error "unable to create directory #{x}"
-	  return
-	end
+        rescue => x
+          logfile.error "unable to create directory #{x}"
+          return
+        end
       end
 
-      raise "You can't run the collector twice" if @thread
+      raise "You can't run the collector twice" if @rthread
 
       @started = Time.now
-      @thread = Thread.new do
+      @rthread = Thread.new do
         begin
           Open3.popen3(*backup.command) do |stdin, stdout, stderr, wait_thr|
             stdin.close
             still_open = [stdout,stderr]
             @pid = wait_thr.pid
             start_time = nil
-	    active = nil
-	    need_log = nil
+            active = nil
+            need_log = nil
             while not still_open.empty?
-	      if need_log && Time.now - start_time > 0.01
-		need_log = false
-		(cnt, filename, size, md5) = @current
-		case cnt[1]
-		when 'f'
-		  logfile.debug "starting: #{md5||'N/A'} #{"%10d" % size} '#{File.absolute_path(File.join(backup.path, filename), '/')}'"
-		end
-	      end
+              if need_log && Time.now - start_time > 0.01
+                need_log = false
+                (cnt, filename, size, md5) = @current
+                case cnt[1]
+                when 'f'
+                  logfile.debug "starting: #{md5||'N/A'} #{"%10d" % size} '#{File.absolute_path(File.join(backup.path, filename), '/')}'"
+                end
+              end
               IO.select(still_open,nil,nil,nil)[0].each do |fh|
                 begin
                   case fh
                   when stdout
-		    need_log = false
+                    need_log = false
                     if active
-		      active = false
+                      active = false
                       cnt, filename, size, md5 = @current
                       logfile.info "#{cnt} :: #{filename}"
                       dst = File.join(backup.static_path, filename)
@@ -228,25 +196,25 @@ puts "daemon"
                           end
                         when 'file'
                           begin
-			    if File.exist?(backup.inode_path)
-			      if md5.nil?
-				digest = Digest::MD5.new
-				File.open(src) do |file|
-				  digest << file.read
-				end
-				md5 = digest.to_s
-			      end
-			      if md5
-				dir = File.join(backup.inode_path, md5[0])
-				Dir.mkdir(dir) unless File.exists? dir
-				file = File.join(dir, md5)
-				if File.exists? file
-				  sstat =  File.stat(src)
-				  if File.stat(file).ino != sstat.ino
-				    File.utime(sstat.atime, sstat.mtime, file)
-				    File.chmod(sstat.mode, file)
-				    File.chown(sstat.uid, sstat.gid, file)
-				    fsstat =  File.stat(file)
+                            if File.exist?(backup.inode_path)
+                              if md5.nil?
+                                digest = Digest::MD5.new
+                                File.open(src) do |file|
+                                  digest << file.read
+                                end
+                                md5 = digest.to_s
+                              end
+                              if md5
+                                dir = File.join(backup.inode_path, md5[0])
+                                Dir.mkdir(dir) unless File.exists? dir
+                                file = File.join(dir, md5)
+                                if File.exists? file
+                                  sstat =  File.stat(src)
+                                  if File.stat(file).ino != sstat.ino
+                                    File.utime(sstat.atime, sstat.mtime, file)
+                                    File.chmod(sstat.mode, file)
+                                    File.chown(sstat.uid, sstat.gid, file)
+                                    fsstat =  File.stat(file)
 puts "Fixup #{file} #{src}"
 puts "m #{sstat.mode} #{fsstat.mode}" if sstat.mode != fsstat.mode
 puts "u #{sstat.uid} #{fsstat.uid}" if sstat.uid != fsstat.uid
@@ -256,23 +224,23 @@ puts "m #{sstat.mtime} #{fsstat.mtime}" if sstat.mtime != fsstat.mtime
 #puts "c #{sstat.ctime} #{fsstat.ctime}" if sstat.ctime != fsstat.ctime
                                     File.unlink(src)
                                     File.link(file, src)
-				  end
-				else
+                                  end
+                                else
                                   File.link(src, file)
-				end
-			      end
-			    end
+                                end
+                              end
+                            end
                             if File.exists?(dst)
                               if File.directory? dst
                                 Dir.unlink(dst)
                                 File.link(src, dst)
                               else
-				sstat = File.stat(src)
-				dstat = File.stat(dst)
-				if sstat.ino != dstat.ino
-				  File.rename(src, dst)    # NOTE: This causes the .static file to always be present
-				  File.link(dst, src)
-				end
+                                sstat = File.stat(src)
+                                dstat = File.stat(dst)
+                                if sstat.ino != dstat.ino
+                                  File.rename(src, dst)    # NOTE: This causes the .static file to always be present
+                                  File.link(dst, src)
+                                end
                               end
                             else
                               path = File.dirname dst
@@ -293,38 +261,38 @@ puts "m #{sstat.mtime} #{fsstat.mtime}" if sstat.mtime != fsstat.mtime
                         @current = nil
                       end
                     end
-		    if line = stdout.readline
+                    if line = stdout.readline
                       line.chomp!
                       logfile.info "'#{line}'" if @verbose
                       (cnt, filename, size, md5) = line.split(/\|/)
-		      if md5.strip.size < 32
-		        md5 = nil
-		      end
-		      size = size.to_i
-		      if size.to_i > 2048 * 1
-			if File.exist?(backup.inode_path)
-			  if md5
-			    dir = File.join(backup.inode_path, md5[0])
-			    file = File.join(dir, md5)
+                      if md5.strip.size < 32
+                        md5 = nil
+                      end
+                      size = size.to_i
+                      if size.to_i > 2048 * 1
+                        if File.exist?(backup.inode_path)
+                          if md5
+                            dir = File.join(backup.inode_path, md5[0])
+                            file = File.join(dir, md5)
                             src = File.join(backup.active_path, filename)
-			    if File.exists? file
-			      sstat = File.stat(src)
-			      fstat = File.stat(file)
-			      if sstat.size != fstat.size
-			        raise "#{sstat.size} #{fstat.size} #{src} #{file}"
-			      end
-			      # We need to send a signale to rsync here to get it to skip this file
-			      #Process.kill("STOP", @pid)
-			      #"COPY FILE #{file} #{src}"
-			      #Process.kill("CONT", @pid)
-			    end
-			  end
-		        end
-		      end
-		      start_time = Time.now
-		      need_log   =  true
-		      active     =  true  # 
-		      @current = [cnt, filename, size, md5]
+                            if File.exists? file
+                              sstat = File.stat(src)
+                              fstat = File.stat(file)
+                              if sstat.size != fstat.size
+                                raise "#{sstat.size} #{fstat.size} #{src} #{file}"
+                              end
+                              # We need to send a signale to rsync here to get it to skip this file
+                              #Process.kill("STOP", @pid)
+                              #"COPY FILE #{file} #{src}"
+                              #Process.kill("CONT", @pid)
+                            end
+                          end
+                        end
+                      end
+                      start_time = Time.now
+                      need_log   =  true
+                      active     =  true  # 
+                      @current = [cnt, filename, size, md5]
                     end
                     if @stop
                       if @pid
@@ -357,20 +325,15 @@ puts "m #{sstat.mtime} #{fsstat.mtime}" if sstat.mtime != fsstat.mtime
         rescue => x
           logfile.error "Error End of Thread #{ @thread } #{x}"
         end
-        logfile.info "End of Thread #{ @thread }"
+        logfile.info "End of Thread #{ @rthread }"
         @ended = Time.now
-        @thread = nil
+        @rthread = nil
         @stop = false
       end # Thread
-    end
-    # run 
-    def run
-      if @thread
-        return nil
+      while @rthread
+        @rthread.join(10)
+        puts "check thread" if @rthread
       end
-      thread = trun
-      thread.join if thread
-      @thread = nil
     end
   end # class Collector
 end # module

@@ -1,7 +1,6 @@
-#
-# $Author$
-# Copyright (C) 2013-2014 G. Allen Morris III
-#
+# Author::    "G. Allen Morris III" (mailto:gam3@gam3.net)
+# Copyright:: Copyright (c) 2013-2014 G. Allen Morris III
+# License::   GPL 2.0
 require 'resolv'
 require 'socket'
 require 'singleton'
@@ -243,10 +242,13 @@ puts "copy"
           else
             raise "unknow type " + e[0].to_s
           end
-          if e[-1]
-            obj.instance_eval &(e[-1])
-          end
-          obj.expand
+	  begin
+	    if e[-1]
+	      obj.instance_eval &(e[-1])
+	    end
+	    obj.expand
+	  rescue BackerUp::Configure::Skip
+	  end
         end
         @eval.clear
       end

@@ -1,3 +1,6 @@
+# Author::    "G. Allen Morris III" (mailto:gam3@gam3.net)
+# Copyright:: Copyright (c) 2013-2014 G. Allen Morris III
+# License::   GPL 2.0
 require 'logger'
 
 module BackerUp
