@@ -12,9 +12,9 @@ To-do
 - [x] Get the collector to work
 - [x] create demo copier
 - [x] create demo cleaner
-- [ ] Get the configuration working
-- [ ] create copier
-- [ ] create cleaner
+- [x] Get the configuration working
+- [x] create copier
+- [x] create cleaner
 
 Design principles of backerup
 =============================
