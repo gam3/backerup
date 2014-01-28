@@ -40,19 +40,27 @@ module BackerUp
     # run as daemaon that cleans a root periodicly
     def trun
       @thread = Thread.new {
-        @running = true
-        while @running
-          sleep 60 - Time.now.sec
-BackerUp::logger.info("copy check time")
-          if Time.now.min % (60 / @root.copy_factor) > 0
-             puts "Next copy in #{(60 / @root.copy_factor) - (Time.now.min % (60 / @root.copy_factor))} minutes" if verbose?
-          else
-            puts "Starting copy for #{path}" if verbose?
-            BackerUp::logger.info("Starting copy for #{path}")
-            run
-            BackerUp::logger.info("Finished copy for #{path}")
-          end
-        end
+	@running = true
+	while @running
+	  begin
+	    BackerUp::logger.info("First copy in #{(60 / @root.copy_factor) - (Time.now.min % (60 / @root.copy_factor))} minutes")
+	    while @running
+	      # FIXME should be able to set between 4 times per hour 
+	      time = Time.now
+	      if ((time.hour * 60) + time.min) % (60 / @root.copy_factor) == 0
+		puts "Starting copy for #{@root}" if verbose?
+		BackerUp::logger.info("Starting copy for #{@root}")
+		run
+	        time = Time.now
+		minutes = ((time.hour * 60) + time.min)
+	        BackerUp::logger.info("Next copy in #{(60 / @root.copy_factor) - (minutes % (60 / @root.copy_factor))} minutes")
+	      end
+	      sleep 60 - (Time.now.sec + Time.now.nsec/1000000000.0)
+	    end
+	  rescue => x
+	    BackerUp::logger.error("Error in copy: #{x}")
+	  end
+	end
       }
       self
     end
@@ -80,9 +88,10 @@ BackerUp::logger.info("copy check time")
       while @paths.size > 0
         cntrl = @paths.pop
 	FileUtils.remove_entry_secure(cntrl[:temp], :force => true)
-	System.kill(cntrl[:pid]) if cntrl[:pid]
+        Process.kill 'TERM', cntrl[:pid] if cntrl[:pid]
       end
     end
+    # make a copy of the .static directory
     def run
       start_time = DateTime.now.strftime "%Y%m%d%H%M%S"
       @paths = Array.new
@@ -100,7 +109,7 @@ BackerUp::logger.info("copy check time")
         :dest => File.join(root_path, "hourly-" + start_time), 
       ] 
       @paths.each do |path|
-BackerUp::logger.info("copy #{path}")
+	BackerUp::logger.info("copy #{path}")
         if File.exist?(path[:temp])
           BackerUp::logger.info("copy in progress for #{path[:root]}")
           next
@@ -121,9 +130,7 @@ BackerUp::logger.info("copy #{path}")
         end
       end
       while @paths.size > 0
-        paths = @paths
-        @paths = Array.new
-        paths.each do |path|
+        @paths.each do |path|
           next unless path[:thread]
           if path[:thread].join(1)
             Open3.popen3( "mv #{path[:temp]} #{path[:dest]}") do |stdin, stdout, stderr, wait_thr|
@@ -138,9 +145,9 @@ BackerUp::logger.info("copy #{path}")
           else
             # Make sure the cleaner does not remove this directory
             FileUtils.touch(path[:temp])
-            @paths.push path
           end
         end
+	@paths = @paths.keep_if { |p| !p[:done] }
       end
       ret
     end # def run

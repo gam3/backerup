@@ -1,4 +1,3 @@
-puts "HELPER"
 
 if ENV['COVERAGE'] == 'test'
   require 'simplecov'
@@ -8,7 +7,6 @@ if ENV['COVERAGE'] == 'test'
     add_filter "/spec/"
   end
 end
-
 
 require 'minitest/autorun'
 require 'minitest/spec'

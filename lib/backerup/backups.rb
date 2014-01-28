@@ -4,11 +4,13 @@
 require 'set'
 
 module BackerUp
+  # @api public
   # This singleton contains all the Sources.
   # A source is a triple of host, path, source
   # For a given host path pair there can only be a single source and 
   # for any host source pair there can be only on source.
   class Sources
+    # @api private
     # Initialize the Sources singleton
     def initialize
       @pth = Hash.new { |h, k| h[k] = Hash.new }
@@ -26,6 +28,7 @@ module BackerUp
     end
     # clear all the sources
     # @return [Array] The list of sources removed
+    # @example BackerUp::Sources.clear
     def self.clear
       instance.clear
     end

@@ -41,6 +41,14 @@ task :install => :gem do
   sh "gem install backerup-#{BackerUp::VERSION}.gem --no-rdoc --no-ri"
 end
 
+desc "Run all tests and specs"
+Rake::TestTask.new(:check) do |t|
+    t.libs << "test"
+    t.libs << "spec"
+    t.test_files = FileList['test/test_*.rb', 'spec/spec_*.rb']
+#     t.verbose = true
+end
+
 desc "Run all tests"
 Rake::TestTask.new(:test) do |t|
     t.libs << "test"

@@ -54,17 +54,22 @@ module BackerUp
       @running = nil
     end
     def trun
-      @thread = Thread.new { 
-        @running = true
-	x = rand * 3600
-	puts "delaying cleaner by #{x/60} minutes" if verbose?
-	sleep x
+      @thread = Thread.new {
+	@running = true
         while @running
-	  puts "Cleaning" if verbose?
-          run
-	  x = 3600 + rand * 3600
-	  puts "next clean in #{x/60} minutes" if verbose?
-	  sleep x
+	  begin
+	    x = rand * (30 * 60)
+	    BackerUp::logger.info("Will clean in less than #{(x/60).round + 1} minutes")
+	    sleep x
+	    while @running
+	      run
+	      x = (20 * 60) + rand * (20 * 60)
+	      BackerUp::logger.info("Next clean in less than #{(x/60).round + 1} minutes")
+	      sleep x
+	    end
+	  rescue => x
+	    BackerUp::logger.error("Error #{x}")
+	  end
 	end
       }
       self

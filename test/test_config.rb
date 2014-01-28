@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require 'helper'
+require 'thelper'
 
 require 'minitest/autorun'
 require 'backerup/configure'

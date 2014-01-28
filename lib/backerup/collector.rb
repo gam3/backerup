@@ -78,7 +78,7 @@ module BackerUp
     # run the collector in syncronous mode
     def stop
       if @pid
-        System.kill @pid
+        Process.kill 'TERM', @pid
       end
     end
     # kill this cleaner
@@ -90,14 +90,23 @@ module BackerUp
     # run the collector in asyncronous mode
     def trun
       @thread = Thread.new {
-        @running = true
-        while @running
-          sleep 600 + rand * 600
-logfile.info "start backup of #{@backup}"
-          run
-logfile.info "end backup of #{@backup}"
-          run
-        end
+	@running = true
+	while @running
+	  begin
+	    x = 60 + rand * 60
+	    logfile.info "First collect of #{@backup} in less than #{x.round} minutes"
+	    sleep x
+	    while @running
+	      logfile.info("collect #{@backup}")
+	      run
+	      x = 60 + rand * 60
+	      logfile.info "Next collect of #{@backup} in less than #{x.round} minutes"
+	      sleep x
+	    end
+	  rescue => x
+	    BackerUp::logger.error("Error #{x}")
+	  end
+	end
       }
       self
     end
@@ -325,7 +334,6 @@ puts "m #{sstat.mtime} #{fsstat.mtime}" if sstat.mtime != fsstat.mtime
         rescue => x
           logfile.error "Error End of Thread #{ @thread } #{x}"
         end
-        logfile.info "End of Thread #{ @rthread }"
         @ended = Time.now
         @rthread = nil
         @stop = false
