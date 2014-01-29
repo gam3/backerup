@@ -98,7 +98,8 @@ module BackerUp
 	      sleep x
 	    end
 	  rescue => x
-	    BackerUp::logger.error("Error #{x}")
+	    BackerUp::logger.error("Error collector #{x.message}")
+	    BackerUp::logger.error("Backtrace: #{x.backtrace}")
 	  end
 	end
       }
@@ -170,7 +171,8 @@ module BackerUp
                         if (count += 1) > 2
                           break
                         end
-                        puts "FIXME #{src}"  
+#                        puts "FIXME #{src}"  
+			BackerUp::logger.error("FIXME #{src}")
                       end
                       if count > 1000
                         logfile.info src
@@ -218,13 +220,13 @@ module BackerUp
                                     File.chmod(sstat.mode, file)
                                     File.chown(sstat.uid, sstat.gid, file)
                                     fsstat =  File.stat(file)
-puts "Fixup #{file} #{src}"
-puts "m #{sstat.mode} #{fsstat.mode}" if sstat.mode != fsstat.mode
-puts "u #{sstat.uid} #{fsstat.uid}" if sstat.uid != fsstat.uid
-puts "g #{sstat.gid} #{fsstat.gid}" if sstat.gid != fsstat.gid
-puts "a #{sstat.atime} #{fsstat.atime}" if sstat.atime != fsstat.atime
-puts "m #{sstat.mtime} #{fsstat.mtime}" if sstat.mtime != fsstat.mtime
-#puts "c #{sstat.ctime} #{fsstat.ctime}" if sstat.ctime != fsstat.ctime
+BackerUp::logger.error("Fixup #{file} #{src}")
+BackerUp::logger.error("m #{sstat.mode} #{fsstat.mode}") if sstat.mode != fsstat.mode
+BackerUp::logger.error("u #{sstat.uid} #{fsstat.uid}") if sstat.uid != fsstat.uid
+BackerUp::logger.error("g #{sstat.gid} #{fsstat.gid}") if sstat.gid != fsstat.gid
+BackerUp::logger.error("a #{sstat.atime} #{fsstat.atime}") if sstat.atime != fsstat.atime
+BackerUp::logger.error("m #{sstat.mtime} #{fsstat.mtime}") if sstat.mtime != fsstat.mtime
+#puts "c #{sstat.ctime} #{fsstat.ctime}") if sstat.ctime != fsstat.ctime
                                     File.unlink(src)
                                     File.link(file, src)
                                   end
@@ -256,8 +258,10 @@ puts "m #{sstat.mtime} #{fsstat.mtime}" if sstat.mtime != fsstat.mtime
                             logfile.info "link error:: #{x}"
                             File.unlink(src)
                           end
+                        when 'fifo'
+		          logfile.warn "Ignoring FIFO #{src}"
                         else
-                          raise "Error #{File.ftype(src).to_s}"
+                          raise "Error 1 #{File.ftype(src).to_s}"
                         end
                       end
                       if @current
@@ -333,8 +337,8 @@ puts "m #{sstat.mtime} #{fsstat.mtime}" if sstat.mtime != fsstat.mtime
         @stop = false
       end # Thread
       while @rthread
-        @rthread.join(10)
-        puts "check thread" if @rthread
+        @rthread.join(60)
+        logfile.info("#{backup} has been running since #{@started} [#{Time.now - @started}]")
       end
     end
   end # class Collector
