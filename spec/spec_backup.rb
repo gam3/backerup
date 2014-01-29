@@ -13,7 +13,7 @@ describe BackerUp::Backup do
     it 'returns a BackerUp::Backup object' do
     end
   end
-  describe '#exclude_pats' do
+  describe '#exclude_paths' do
     before do
       @b = BackerUp::Backup.new('host', 'path')
     end

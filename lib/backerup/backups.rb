@@ -426,6 +426,9 @@ puts "swap path and source"
       end
     end
   end
+  # Information about a network
+  class Network
+  end
   # The Host class holds information for a given device
   class Host
     # the name of the host
@@ -433,6 +436,9 @@ puts "swap path and source"
     # Initialize
     def initialize(host)
       @name = host
+    end
+    def networks()
+      [ Network.new ]
     end
   end
   # The Root class holds information for a given root

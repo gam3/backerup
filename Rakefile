@@ -59,6 +59,7 @@ task :tests => :test
 
 desc "Run all specs"
 Rake::TestTask.new(:specs) do |t|
+    t.verbose = true
     t.libs << "spec"
     t.test_files = FileList[ 'spec/spec_*.rb' ]
 end

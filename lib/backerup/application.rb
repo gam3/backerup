@@ -190,7 +190,7 @@ module BackerUp
 	  begin
 	    c.stop
 	  rescue => x
-	    logfile.debug "error in exit #{x}"
+	    logfile.debug "error in exit #{x} #{c}"
 	  end
         end
         logfile.info "Stopped backerup cleaner"
