@@ -68,7 +68,7 @@ module BackerUp
 	      sleep x
 	    end
 	  rescue => x
-	    BackerUp::logger.error("Error #{x}")
+	    BackerUp::logger.error("Error in cleaner #{x}")
 	  end
 	end
       }
