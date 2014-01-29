@@ -14,14 +14,8 @@ module BackerUp
   # This class contains the collector application of backerup system
   class AppCollector
     # show the actions of running this command once
-    def self.dry_run
-      backups = Backups.instance
-
-      all  = Array.new
-
-      backups.each do |backup|
-        puts backup.command.map{ |x| Shellwords.escape(x) }.join(' ')
-      end
+    def self.dry_run(backup)
+      puts backup.command.map{ |x| Shellwords.escape(x) }.join(' ')
     end
     # run the backups
     def self.trun(backup, extra = {})
