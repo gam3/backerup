@@ -44,7 +44,8 @@ end
 describe "BackerUp::Copier" do
   before do
     @mock = MiniTest::Mock.new
-    @mock.expect(:path, File.join('/tmp/backerup_test', "%05d" % (rand * 1000).round.to_s))
+    file = File.join('/tmp/backerup_test', "%05d" % (rand * 1000).round.to_s)
+    @mock.expect(:path, file)
     @c = BackerUp::Copier.new @mock
     @output = ""
     BackerUp.logger = BackerUp::Logger::Logger.new(StringIO.open(@output,'w'))

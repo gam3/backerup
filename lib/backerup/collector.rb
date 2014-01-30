@@ -77,7 +77,7 @@ module BackerUp
     end
     # kill this cleaner
     def kill
-      Process.kill 'TERM', @pid
+      Process.kill 'KILL', @pid
       @pid = nil
     end
 
@@ -87,14 +87,14 @@ module BackerUp
 	@running = true
 	while @running
 	  begin
-	    x = 60 + rand * 60
-	    logfile.info "First collect of #{@backup} in less than #{x.round} minutes"
+	    x = 60 + rand * 600
+	    logfile.info "First collect of #{@backup} in less than #{(x/60.0).floor} minutes"
 	    sleep x
 	    while @running
 	      logfile.info("collect #{@backup}")
 	      run
-	      x = 60 + rand * 60
-	      logfile.info "Next collect of #{@backup} in less than #{x.round} minutes"
+	      x = 60 + rand * 600
+	      logfile.info "Next collect of #{@backup} in less than #{(x/60.0).floor} minutes"
 	      sleep x
 	    end
 	  rescue => x
@@ -334,11 +334,16 @@ BackerUp::logger.error("m #{sstat.mtime} #{fsstat.mtime}") if sstat.mtime != fss
         end
         @ended = Time.now
         @rthread = nil
+	@pid = nil
         @stop = false
-      end # Thread
+      end # Thread @rthread
       while @rthread
         @rthread.join(60)
-        logfile.info("#{backup} has been running since #{@started} [#{Time.now - @started}]")
+	if @rthread
+          logfile.info("#{backup} has been running since #{@started} [#{Time.now - @started}]")
+	else
+          logfile.info("#{backup} ended #{@started} [#{Time.now - @started}]")
+	end
       end
     end
   end # class Collector

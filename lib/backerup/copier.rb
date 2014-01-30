@@ -131,6 +131,10 @@ module BackerUp
       end
       while @paths.size > 0
         @paths.each do |path|
+	  path[:done] = true unless path[:thread]
+	end
+	@paths = @paths.keep_if { |p| !p[:done] }
+        @paths.each do |path|
           next unless path[:thread]
           if path[:thread].join(1)
             Open3.popen3( "mv #{path[:temp]} #{path[:dest]}") do |stdin, stdout, stderr, wait_thr|

@@ -24,7 +24,7 @@ end
 #YARD::VERSION.replace(ENV['YARD_VERSION']) if ENV['YARD_VERSION']
 
 #task :default => :specs
-task :default => [ :specs, :test ]
+task :default => [ :check ]
 
 desc "Builds the gem"
 task :gem do
