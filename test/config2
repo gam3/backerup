@@ -8,10 +8,13 @@ hostname('BurkinaFaso') {
    }
 }
 
+root('/opt/backerup')
+sieve('weekly')
+
 group {
   host('burkinaFaso') {
-    root = '/opt/backerup'
     root '/opt/backerup'
+    backup('/home/gam4')
     backup('/home/gam3') {
       source 'gam3'
       exclude '/home/gam3/movies'
@@ -20,13 +23,26 @@ group {
     }
   }
   host('bob') {
-    root = '/opt/backerup'
+    root('/opt/backerup')
     backup('/home/gam3') {
       source 'gam3'
       exclude '/home/gam3/movies'
       exclude '/home/gam3/.VirtualBox'
       exclude '/home/gam3/src/backfire_10.03.1'
+      exclude '.notes'
+    }
+    source('/tmp', '::tmp')
+    source('/etc', '::etc') {
+      exclude '.xsession-errors'
+      exclude '/etc/.xsession-errors'
+      backup('/etc/help') {
+      }
+      backup('/etc/nohelp')
+    }
+    group {
+      exclude('/tmp/bob')
     }
   }
 }
+exclude('bob', '/xxx')
 

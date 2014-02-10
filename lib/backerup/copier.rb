@@ -48,10 +48,9 @@ module BackerUp
 	      # FIXME should be able to set between 4 times per hour 
 	      time = Time.now
 	      if ((time.hour * 60) + time.min) % (60 / @root.copy_factor) == 0
-		puts "Starting copy for #{@root}" if verbose?
 		BackerUp::logger.info("Starting copy for #{@root}")
 		run
-	        time = Time.now
+	        BackerUp::logger.info("Copy took #{Time.now - time}")
 		minutes = ((time.hour * 60) + time.min)
 	        BackerUp::logger.info("Next copy in #{(60 / @root.copy_factor) - (minutes % (60 / @root.copy_factor))} minutes")
 	      end

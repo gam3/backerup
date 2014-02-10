@@ -24,6 +24,7 @@ module BackerUp
       Cleaner.new(root, extra).trun
     end
   end
+
   # Clean up the backup by sieving the directories
   class Cleaner
     @@types = [ :hourly, :daily, :weekly, :monthly, :yearly ]
@@ -257,9 +258,11 @@ module BackerUp
 	sieve_hash[type][sieve_key].push name
       end
       rename_count = 0
+      skip = Set.new
       get_delete(sieve_hash).each do |file|
 	if @dry_run
-	  puts "unlink #{file}"
+	  puts "rm #{file}"
+          skip.add file
 	else
 	  File.rename(file, File.join(File.dirname(file), '.' + File.basename(file)))
 	end
@@ -276,13 +279,17 @@ module BackerUp
 	end
 	next if type == :yearly
 
-	# rename if the backup if out of its  timeslot
+	# rename if the backup if out of its timeslot
 
 	rename_count = 0
         if time_offset(type, time) > @config[type][:span]
 	  dest = File.join(File.dirname(name), "#{next_type(type)}-#{rawtime}")
 	  if @dry_run
-	    puts "rename #{name} #{dest}"
+	    if skip.include? name
+	      next
+	    else
+	      puts "mv #{name} #{dest}"
+	    end
 	  else
             File.rename(name, dest)
           end

@@ -34,16 +34,12 @@ module BackerUp
         raise Skip, msg, bt
       end
       # Set the root of the backup
-      def root(path, &block)
+      def root(path)
         @set[:root] = path
-        if block
-          Root.new(path).instance_eval &block
-        end
-puts 'blcok' if block
       end
-      # The type of seive to run
-      def seive(root = nil, &block)
-puts "FIXME seive"
+      # The type of sieve to run
+      def sieve(type)
+        @set[:sieve] = type if type
       end
       # Set the maximum bandwidth for this backup
       def bandwidth(name)
@@ -64,14 +60,6 @@ puts "FIXME seive"
           false
         end
       end
-      # set the network
-      def network(x)
-        @n = x
-      end
-      # set the network
-      def network=(x)
-        @n = x
-      end
     end
     # Configure a single backup
     class Backup
@@ -80,7 +68,6 @@ puts "FIXME seive"
         @path = path
         @host = host
         puts "no host for #{@path}" unless @host
-        @excludes = Array.new
         @eval = []
         @set = {}
         @defaults = defaults
@@ -128,6 +115,15 @@ puts "FIXME seive"
         @eval = Array.new
       end
       include Common
+      # exclude files
+      def exclude(path)
+        if (path[0] == '/') 
+          full_path = File.expand_path(path)
+        else
+          full_path = File.join(@path, path)
+        end
+        Excludes.get(@host, full_path)
+      end
       # get the defaults
       # create a backup
       def backup(path = nil, &block)
@@ -157,18 +153,6 @@ puts "FIXME seive"
       # Create or update the source
       def expand
         source = Sources.instance.get(@host, @path, @source)
-      end
-    end
-    # Configure a single host
-    class Root
-      def initialize(path, defaults = {})
-puts "Root = #{path}"
-      end
-      def seive(type = :weekly)
-puts "seive"
-      end
-      def copy(type = :weekly)
-puts "copy"
       end
     end
     # Hosts can have networks
@@ -220,7 +204,6 @@ puts "copy"
         @hostname = hostname
         @defaults = defaults
         @eval = Array.new
-        @excludes = Array.new
         @skipped_hostsnames = []
         @set = Hash.new
         @set[:excludes] = Array.new
@@ -228,9 +211,6 @@ puts "copy"
       # expand the host group
       def expand()
         new_defaults = @defaults.merge(@set)
-        @excludes.each do |e|
-          new_defaults[:excludes] << e
-        end
         @eval.each do |e|
           case e[0]
           when :backup
@@ -270,7 +250,6 @@ puts "copy"
       end
       # add a source for a host
       def source(base_path, source_path, &block)
-puts "source in host #{@hostname}"
         host = @hostname
         if block
           @eval.push [:source, host, base_path, source_path, block]
@@ -315,10 +294,8 @@ puts "source in host #{@hostname}"
             obj = Backup.new(e[1], e[2], new_defaults)
           when :source
             obj = Source.new(e[1], e[2], e[3], new_defaults)
-          when :exclude
-puts "FIXME #{e}"
           else
-puts "FIXME #{e}"
+	    raise "unknow type #{e[0]}"
           end
           if obj
             ok = true

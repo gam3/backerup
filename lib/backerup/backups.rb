@@ -334,7 +334,7 @@ puts "swap path and source"
     end
     # the copy_factor is the number of copies to make per hour
     def copy_factor
-      4
+      1
     end
   end
   class Exclude

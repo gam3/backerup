@@ -2,7 +2,6 @@
 
 require 'thelper'
 
-require 'minitest/autorun'
 require 'backerup/backups'
 
 require 'pp'
