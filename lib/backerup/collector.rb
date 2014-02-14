@@ -6,9 +6,7 @@ require 'open3'
 
 require 'digest/sha1'
 
-require 'backerup/configure'
-configure = BackerUp::Configure.new
-
+require 'backerup/logger'
 
 module BackerUp
   # This class contains the collector application of backerup system
@@ -111,23 +109,28 @@ module BackerUp
       begin
         FileUtils.mkdir_p( backup.active_path, :mode => 0755 )
         FileUtils.mkdir_p( backup.static_path, :mode => 0755 )
-      rescue => x
+      rescue Errno::EACCES => x
         logfile.error "unable to create directory #{x.class}"
-        return
+        raise RuntimeError
       end
       if backup.partial_path
         begin
           FileUtils.mkdir_p( backup.partial_path, :mode => 0755 )
-        rescue => x
+        rescue Errno::EACCES => x
           logfile.error "unable to create directory #{x}"
-          return
+          raise RuntimeError
         end
       end
+   
+      logfile.debug "Touch #{backup.active_path}" if logfile
+      FileUtils.touch(backup.active_path)
 
       raise "You can't run the collector twice" if @rthread
 
       @started = Time.now
+      file_count = 0
       @rthread = Thread.new do
+        backup.start
         begin
           Open3.popen3(*backup.command) do |stdin, stdout, stderr, wait_thr|
             stdin.close
@@ -236,6 +239,7 @@ BackerUp::logger.error("m #{sstat.mtime} #{fsstat.mtime}") if sstat.mtime != fss
                               end
                             end
                             if File.exists?(dst)
+			      file_count += 1
                               if File.directory? dst
                                 Dir.unlink(dst)
                                 File.link(src, dst)
@@ -327,24 +331,29 @@ BackerUp::logger.error("m #{sstat.mtime} #{fsstat.mtime}") if sstat.mtime != fss
                 end
               end # case
             end # while
+            logfile.debug "Touch #{backup.static_path} #{file_count}"
             @exit_status = wait_thr.value
           end
         rescue => x
           logfile.error "Error End of Thread #{ @thread } #{x}"
+	  raise
         end
         @ended = Time.now
         @rthread = nil
 	@pid = nil
         @stop = false
+        backup.finish
       end # Thread @rthread
       while @rthread
-        @rthread.join(60)
+        # don't do anything for a minute
+        @rthread.join(60)		# TODO make this more adjustable
 	if @rthread
           logfile.info("#{backup} has been running since #{@started} [#{Time.now - @started}]")
 	else
           logfile.info("#{backup} ended #{@started} [#{Time.now - @started}]")
 	end
       end
+      nil
     end
   end # class Collector
 end # module

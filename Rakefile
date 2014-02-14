@@ -45,7 +45,7 @@ desc "Run all tests and specs"
 Rake::TestTask.new(:check) do |t|
     t.libs << "test"
     t.libs << "spec"
-    t.test_files = FileList['test/test_*.rb', 'spec/spec_*.rb']
+    t.test_files = FileList['test/test_*.rb', 'spec/*_spec.rb']
 #     t.verbose = true
 end
 
@@ -61,12 +61,12 @@ desc "Run all specs"
 Rake::TestTask.new(:specs) do |t|
     t.verbose = true
     t.libs << "spec"
-    t.test_files = FileList[ 'spec/spec_*.rb' ]
+    t.test_files = FileList[ 'spec/*_spec.rb' ]
 end
 task :spec => :specs
 
 YARD::Rake::YardocTask.new do |t|
-  t.files   = ['lib/**/*.rb', 'bin/*', 'spec/spec_*.rb' ]   # optional
+  t.files   = ['lib/**/*.rb', 'bin/*', 'spec/*_spec.rb' ]   # optional
   t.options = [ '--plugin', 'minitest-spec' ] # optional
 end if YARD
 
