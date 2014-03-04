@@ -97,6 +97,14 @@ module BackerUp
       return ret
     end
 
+    # select a network and  allocate bandwidth
+    def grab_network(rate = nil)
+    end
+
+    #  
+    def release_network
+    end
+
     # Generate the rsync command for the backup
     # @return [Array] the arguments list
     def command

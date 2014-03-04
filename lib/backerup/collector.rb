@@ -130,7 +130,7 @@ module BackerUp
       @started = Time.now
       file_count = 0
       @rthread = Thread.new do
-        backup.start
+        backup.grab_network
         begin
           Open3.popen3(*backup.command) do |stdin, stdout, stderr, wait_thr|
             stdin.close
@@ -342,7 +342,7 @@ BackerUp::logger.error("m #{sstat.mtime} #{fsstat.mtime}") if sstat.mtime != fss
         @rthread = nil
 	@pid = nil
         @stop = false
-        backup.finish
+        backup.release_network
       end # Thread @rthread
       while @rthread
         # don't do anything for a minute

@@ -19,12 +19,12 @@ describe BackerUp::Collector do
       @backup.expect(:active_path, '/tmp/active')
       @backup.expect(:static_path, '/tmp/static')
       @backup.expect(:partial_path, nil)
-      @backup.expect(:start, nil)
-      @backup.expect(:finish, nil)
-      bob = %Q{bash -c 'echo "cd+++++++++|./|4096|"
+      @backup.expect(:grab_network, nil)
+      @backup.expect(:release_network, nil)
+      command_data = %Q{bash -c 'echo "cd+++++++++|./|4096|"
       echo "cd+++++++++|a/|4096|"
       echo ">f+++++++++|a/a|0|d41d8cd98f00b204e9800998ecf8427e"'}
-      @backup.expect(:command, bob)
+      @backup.expect(:command, command_data)
       @collector = BackerUp::Collector.new(@backup)
 #      @backup.verify
     end

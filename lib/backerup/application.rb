@@ -11,6 +11,43 @@ require 'shellwords'
 require 'inotify'
 require 'date'
 
+begin
+  require 'ffi'
+   
+  module LinuxProcName
+    # Set process name
+    PR_SET_NAME = 15
+   
+    module LibC
+      extend FFI::Library
+      ffi_lib FFI::Library::LIBC
+   
+      begin
+	attach_function :prctl, [ :ulong, :ulong, :ulong, :ulong ], :int
+      rescue FFI::NotFoundError
+	# We couldn't find the method
+      end
+    end
+   
+    def self.set_proc_name(name)
+      return false unless LibC.respond_to?(:prctl)
+   
+      # The name can be up to 16 bytes long, and should be null-terminated if
+      # it contains fewer bytes.
+      name = name.slice(0, 16)
+      ptr = FFI::MemoryPointer.from_string(name)
+      LibC.prctl(PR_SET_NAME, ptr.address, 0, 0)
+    ensure
+      ptr.free if ptr
+    end
+  end
+rescue
+  module LinuxProcName
+    def self.set_proc_name(name)
+    end
+  end
+end
+
 require 'backerup/cleaner'
 
 module BackerUp
@@ -25,6 +62,7 @@ module BackerUp
     attr_reader :original_dir
     # initialize 
     def initialize
+      LinuxProcName.set_proc_name($0)
       @original_dir = Dir.getwd 
       @options = OpenStruct.new
       case File.basename($0)

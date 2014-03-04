@@ -12,6 +12,7 @@ describe 'BackerUp' do
     it 'can be set' do
       BackerUp.logger = 'bob'
       BackerUp.logger.must_equal 'bob'
+      BackerUp.logger = nil
     end
   end
 end
