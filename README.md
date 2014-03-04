@@ -9,12 +9,8 @@ Backerup improves on the ideas that http://www.rsnapshot.com uses.  While rsnaps
 
 To-do
 
-- [x] Get the collector to work
-- [x] create demo copier
-- [x] create demo cleaner
-- [x] Get the configuration working
-- [x] create copier
-- [x] create cleaner
+- [ ] create a data checker
+- [ ] log amount of data added and removed
 
 Design principles of backerup
 =============================
@@ -35,14 +31,18 @@ it operates and since backerup is mostly a simple wrapper around
 rsync the user should be able to understand how files are brought
 across the network.
 
-The backerup-copier is really just runs 'cp -rl {source} {dest}' and the
-operator can use that command to recover from backerup failures.
+The backerup-copier runs a 'cp -rl {source} {dest}' in a safe way and
+the operator can use that command to recover from backerup failures.
 
-The backerup-cleaner is just selecting dirctories and deleting them with `rm -rf {dest}'.
+The backerup-cleaner selects directories that can be removed and deletes
+them with `rm -rf {dest}'.
 
 As hardlinks are used the operating system cleans up files that are no
 longer linked to any `snapshot'.
 
-All of the backerup processes can be killed and be left is a recoverable state.
+All of the backerup processes can be killed and the system will be left
+is a recoverable state.
 
-If more than one copy of any of the processes is run it will be inefficient, but will not corrupt the backup.
+If more than one copy of any of the processes is run it will be
+inefficient, but will not corrupt the backup.
+

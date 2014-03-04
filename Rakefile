@@ -45,14 +45,14 @@ desc "Run all tests and specs"
 Rake::TestTask.new(:check) do |t|
     t.libs << "test"
     t.libs << "spec"
-    t.test_files = FileList['test/test_*.rb', 'spec/*_spec.rb']
+    t.test_files = FileList['test/*_test.rb', 'spec/*_spec.rb']
 #     t.verbose = true
 end
 
 desc "Run all tests"
 Rake::TestTask.new(:test) do |t|
     t.libs << "test"
-    t.test_files = FileList['test/test_*.rb']
+    t.test_files = FileList['test/*_test.rb']
 #     t.verbose = true
 end
 task :tests => :test

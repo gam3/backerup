@@ -1,3 +1,3 @@
-# The BackerUp netword backup system
+# The BackerUp network backup system
 module BackerUp
 end

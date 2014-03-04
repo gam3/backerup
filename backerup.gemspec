@@ -12,9 +12,8 @@ Gem::Specification.new do |s|
   s.email       = ["gam3@gam3.net"]
   s.homepage    = "http://www.gam3.org/backerup"
   s.summary     = %q{backup remote systems}
-  s.description = %q{Make backups of remote sytems}
+  s.description = %q{Make archival backups of remote sytems}
 
-#  s.add_runtime_dependency "launchy"
   s.add_development_dependency "yard-minitest-spec", "~>0.1.4"
 
   s.files         = `git ls-files`.split("\n").keep_if { |file| file != '.gitignore' }

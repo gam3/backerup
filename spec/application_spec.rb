@@ -1,5 +1,5 @@
 
-require 'shelper'
+require 'spec_helper'
 
 require 'backerup/application'
 
