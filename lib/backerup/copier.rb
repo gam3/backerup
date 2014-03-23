@@ -70,9 +70,9 @@ module BackerUp
       [ @root.path ].each do |root|
         @paths.push Hash[
           :source => File.join(root, '.static'),
-          :temp => File.join(root, ".copy"), 
+          :temp => File.join(root, ".copy-" + start_time), 
           :dest => File.join(root, "hourly-" + start_time), 
-        ] 
+        ]
       end
       @paths.each do |path|
         puts "cp -rl #{path[:source]} #{path[:temp]}"
