@@ -104,7 +104,7 @@ module BackerUp
       @paths.push Hash[
         :root => root_path,
         :source => File.join(root_path, '.static'),
-        :temp => File.join(root_path, ".copy"), 
+        :temp => File.join(root_path, ".copy-" + start_time), 
         :dest => File.join(root_path, "hourly-" + start_time), 
       ] 
       @paths.each do |path|
