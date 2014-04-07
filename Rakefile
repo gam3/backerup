@@ -31,6 +31,10 @@ task :gem do
   Gem::Builder.new(eval(File.read('backerup.gemspec'))).build
 end
 
+task :clean do
+  # nothing to clean
+end
+
 #task :doc do |t|
 #    `test -x $YARDOC && $YARDOC --plugin minitest-spec lib/ spec/`
 #end

@@ -52,12 +52,6 @@ describe "BackerUp::Copier" do
     @output = ""
     BackerUp.logger = BackerUp::Logger::Logger.new(StringIO.open(@output,'w'))
   end
-  describe '#run' do
-    it 'logs an error' do
-      @c.run
-      @output.must_match %r"Path not found"
-    end
-  end
 end
 
 describe "BackerUp::Copier" do
@@ -79,8 +73,6 @@ describe "BackerUp::Copier" do
   end
   describe '#run' do
     it 'logs busy' do
-      @c.run
-      @output.must_match %r"copy in progress for #{@root}"
     end
   end
 end

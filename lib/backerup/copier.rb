@@ -108,7 +108,6 @@ module BackerUp
         :dest => File.join(root_path, "hourly-" + start_time), 
       ] 
       @paths.each do |path|
-	BackerUp::logger.info("copy #{path}")
         if File.exist?(path[:temp])
           BackerUp::logger.info("copy in progress for #{path[:root]}")
           next

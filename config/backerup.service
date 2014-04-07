@@ -1,0 +1,9 @@
+[Unit]
+Description=Backerup backup service
+
+[Service]
+ExecStart=/usr/bin/backerup
+
+[Install]
+WantedBy=multi-user.target
+

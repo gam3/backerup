@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+BIN = $(CURDIR)/debian/backerup/usr/bin
+ETC = $(CURDIR)/debian/backerup/etc
+RUBY_LIB = $(CURDIR)/debian/backerup$(shell ruby -rrbconfig -e 'print RbConfig::CONFIG["rubylibdir"]')
+
+%:
+	dh $@ 
+
+build:
+	rake
+
+#override_dh_auto_configure:
+#	exit 1
+#	echo config
+
+override_dh_auto_install:
+	install -d $(BIN)
+	install bin/backerup $(BIN)
+	install -d $(RUBY_LIB)
+	install -d $(RUBY_LIB)/backerup
+	install lib/backerup.rb $(RUBY_LIB)
+	install lib/backerup/*.rb $(RUBY_LIB)/backerup
+	install -d $(ETC)
+	install -d $(ETC)/systemd/system
+	install -d $(ETC)/init.d
+	install config/backerup.conf $(ETC)
+	install config/backerup.service $(ETC)/systemd/system/backerup.service
+	install config/backerup.init $(ETC)/init.d/backerup
+
+override_dh_pysupport:
