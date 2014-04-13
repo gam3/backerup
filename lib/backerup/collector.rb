@@ -238,6 +238,10 @@ BackerUp::logger.error("m #{sstat.mtime} #{fsstat.mtime}") if sstat.mtime != fss
                                 end
                               end
                             end
+			    if File.symlink?(dst)
+                              logfile.warning "removing symbolic link #{dst}"
+			      File.unlink(dst)
+			    end
                             if File.exists?(dst)
 			      file_count += 1
                               if File.directory? dst

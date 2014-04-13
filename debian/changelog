@@ -1,3 +1,9 @@
+backerup (0.0.6) unstable; urgency=low
+
+  * resolve bug #5
+
+ -- G. Allen Morris III <gam3@gam3.net>  Sun, 13 Apr 2014 11:07:48 -0700
+
 backerup (0.0.5) unstable; urgency=low
 
   * Initial release

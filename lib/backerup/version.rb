@@ -4,6 +4,6 @@
 
 module BackerUp
   # The current version number of BackerUp
-  VERSION = "0.0.5"
+  VERSION = "0.0.6"
 end
 
